@@ -1,6 +1,5 @@
 # Directories
-/output
-/data
+output/
 
 # Prerequisites
 *.d
