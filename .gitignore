@@ -37,3 +37,8 @@ windows/
 *.exe
 *.out
 *.app
+
+compile_flags.txt
+webcam-face-rec.mk
+webcam-face-rec.project
+webcam-face-rec.txt
