@@ -1,5 +1,7 @@
 # Directories
 output/
+linux/
+windows/
 
 # Prerequisites
 *.d
