@@ -1,5 +1,6 @@
 # Directories
 /output
+/data
 
 # Prerequisites
 *.d
@@ -16,6 +17,7 @@
 
 # Compiled Dynamic libraries
 *.so
+*.so.*
 *.dylib
 *.dll
 
