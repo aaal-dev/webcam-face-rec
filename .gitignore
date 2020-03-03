@@ -16,7 +16,7 @@ output/
 
 # Compiled Dynamic libraries
 *.so
-*.so.*
+*.so.
 *.dylib
 *.dll
 
