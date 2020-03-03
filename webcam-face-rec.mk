@@ -3,17 +3,17 @@
 ## any manual changes will be erased      
 ##
 ## windows_debug
-ProjectName            :=SimpleFaceRig
+ProjectName            :=webcam-face-rec
 ConfigurationName      :=windows_debug
 WorkspacePath          :=D:/src/workspaceCL/workspaceCL
-ProjectPath            :=D:/src/workspaceCL/SimpleFaceRig/SimpleFaceRig
+ProjectPath            :=D:/src/workspaceCL/webcam-face-rec/webcam-face-rec
 IntermediateDirectory  :=output/$(ConfigurationName)
 OutDir                 := $(IntermediateDirectory)
 CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=ArAkinin
-Date                   :=02/03/2020
+Date                   :=03/03/2020
 CodeLitePath           :="C:/Program Files/CodeLite"
 LinkerName             :=C:/TDM-GCC-64/bin/g++.exe
 SharedObjectLinkerName :=C:/TDM-GCC-64/bin/g++.exe -shared -fPIC
@@ -32,7 +32,7 @@ Preprocessors          :=
 ObjectSwitch           :=-o 
 ArchiveOutputSwitch    := 
 PreprocessOnlySwitch   :=-E
-ObjectsFileList        :="SimpleFaceRig.txt"
+ObjectsFileList        :="webcam-face-rec.txt"
 PCHCompileFlags        :=
 MakeDirCommand         :=makedir
 RcCmpOptions           := 
@@ -41,9 +41,9 @@ LinkOptions            :=
 IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch). $(IncludeSwitch)/usr/include $(IncludeSwitch)./include 
 IncludePCH             := 
 RcIncludePath          := 
-Libs                   := $(LibrarySwitch)glfw3 $(LibrarySwitch)dlib $(LibrarySwitch)opencv_core420 $(LibrarySwitch)opencv_highgui420 $(LibrarySwitch)opencv_videoio420 
-ArLibs                 :=  "glfw3" "dlib" "libopencv_core420" "libopencv_highgui420" "libopencv_videoio420" 
-LibPath                := $(LibraryPathSwitch). $(LibraryPathSwitch)/usr/lib $(LibraryPathSwitch)./lib 
+Libs                   := $(LibrarySwitch)glm $(LibrarySwitch)glfw3 $(LibrarySwitch)dlib $(LibrarySwitch)opencv_core420 $(LibrarySwitch)opencv_imgproc420 $(LibrarySwitch)opencv_videoio420 
+ArLibs                 :=  "glm" "glfw3" "dlib" "opencv_core420" "opencv_imgproc420" "opencv_videoio420" 
+LibPath                := $(LibraryPathSwitch). $(LibraryPathSwitch)/usr/lib $(LibraryPathSwitch)./windows/lib 
 
 ##
 ## Common variables
@@ -62,7 +62,7 @@ AS       := C:/TDM-GCC-64/bin/as.exe
 ## User defined environment variables
 ##
 CodeLiteDir:=C:\Program Files\CodeLite
-Objects0=$(IntermediateDirectory)/src_main.cpp$(ObjectSuffix) $(IntermediateDirectory)/src_glad.c$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/src_main.cpp$(ObjectSuffix) $(IntermediateDirectory)/src_shader.cpp$(ObjectSuffix) $(IntermediateDirectory)/src_glad.c$(ObjectSuffix) 
 
 
 
@@ -80,6 +80,12 @@ $(OutputFile): $(IntermediateDirectory)/.d $(Objects)
 	@echo $(Objects0)  > $(ObjectsFileList)
 	$(LinkerName) $(OutputSwitch)$(OutputFile) @$(ObjectsFileList) $(LibPath) $(Libs) $(LinkOptions)
 
+PostBuild:
+	@echo Executing Post Build commands ...
+	copy .\windows\lib\* .\output\windows_debug
+	copy .\data\* .\output\windows_debug
+	@echo Done
+
 MakeIntermediateDirs:
 	@$(MakeDirCommand) "output/$(ConfigurationName)"
 
@@ -95,13 +101,19 @@ PreBuild:
 ##
 $(IntermediateDirectory)/src_main.cpp$(ObjectSuffix): src/main.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/src_main.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/src_main.cpp$(DependSuffix) -MM src/main.cpp
-	$(CXX) $(IncludePCH) $(SourceSwitch) "D:/src/workspaceCL/SimpleFaceRig/SimpleFaceRig/src/main.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_main.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "D:/src/workspaceCL/webcam-face-rec/webcam-face-rec/src/main.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_main.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/src_main.cpp$(PreprocessSuffix): src/main.cpp
 	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_main.cpp$(PreprocessSuffix) src/main.cpp
 
+$(IntermediateDirectory)/src_shader.cpp$(ObjectSuffix): src/shader.cpp
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/src_shader.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/src_shader.cpp$(DependSuffix) -MM src/shader.cpp
+	$(CXX) $(IncludePCH) $(SourceSwitch) "D:/src/workspaceCL/webcam-face-rec/webcam-face-rec/src/shader.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_shader.cpp$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_shader.cpp$(PreprocessSuffix): src/shader.cpp
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_shader.cpp$(PreprocessSuffix) src/shader.cpp
+
 $(IntermediateDirectory)/src_glad.c$(ObjectSuffix): src/glad.c
 	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/src_glad.c$(ObjectSuffix) -MF$(IntermediateDirectory)/src_glad.c$(DependSuffix) -MM src/glad.c
-	$(CC) $(SourceSwitch) "D:/src/workspaceCL/SimpleFaceRig/SimpleFaceRig/src/glad.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_glad.c$(ObjectSuffix) $(IncludePath)
+	$(CC) $(SourceSwitch) "D:/src/workspaceCL/webcam-face-rec/webcam-face-rec/src/glad.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_glad.c$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/src_glad.c$(PreprocessSuffix): src/glad.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_glad.c$(PreprocessSuffix) src/glad.c
 

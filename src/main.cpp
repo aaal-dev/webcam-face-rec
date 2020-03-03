@@ -5,10 +5,14 @@
 
 // GLFW
 #include "GLFW/glfw3.h"
+GLFWwindow* window;
+
+// Include GLM
+#include <glm/glm.hpp>
 
 // OpenCV
 #include <opencv2/opencv.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 // dlib
 #include <dlib/opencv.h>
@@ -17,138 +21,161 @@
 #include <dlib/image_processing.h>
 #include <dlib/gui_widgets.h>
 
+#include <common/shader.hpp>
+
 #define     PI  3.141592654
 
 // Window dimensions
-const GLuint WIDTH = 800, HEIGHT = 600;
+const GLuint DEFAULT_WIDTH = 800, DEFAULT_HEIGHT = 600;
 
 // Is called whenever a key is pressed/released via GLFW
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
-{
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
     std::cout << key << std::endl;
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
-int main()
-{
-    
-    cv::VideoCapture cap(0);
-	if (!cap.isOpened()) {
-		std::cerr << "Unable to connect to camera" << std::endl;
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    (void)window;
+    glViewport(0, 0, width, height);
+}
+
+GLboolean* cvMat2TexInput(cv::Mat& img) {
+    cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
+    cv::flip(img, img, -1);
+    return img.data;
+}
+
+int main() {    
+    cv::VideoCapture* camera = new cv::VideoCapture(0);
+	if (!camera->isOpened()) {
+		fprintf( stderr, "Unable to connect to camera.\n");
+        getchar();
 		return 1;
 	}
+    cv::Mat frame;
+    if (!camera->read(frame)) {
+		fprintf( stderr, "Unable to get frame from camera.\n");
+        getchar();
+		return 1;
+    }
+    
+    int width = frame.cols;
+    int height = frame.rows;
+    GLboolean* image = cvMat2TexInput(frame);
+    IplImage ipl_img = cvIplImage(frame);
 	
 	dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
 	dlib::shape_predictor pose_model;
-	dlib::deserialize("../../shape_predictor_68_face_landmarks.dat") >> pose_model;
+	dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> pose_model;
 
     std::cout << "Starting GLFW context, OpenGL 3.3" << std::endl;
-    glfwInit();
+    
+    // Initialise GLFW
+	if(!glfwInit()) {
+		fprintf( stderr, "Failed to initialize GLFW\n" );
+		getchar();
+		return -1;
+	}
     
 	// Set all the required options for GLFW
+    glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    #ifdef __APPLE__
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    #endif 
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Face", NULL, NULL);
-
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
+    window = glfwCreateWindow(width, height, "Face", NULL, NULL);
+    if (window == NULL) {
+        fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
+        getchar();
         glfwTerminate();
         return -1;
     }
-    
     glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // Set the required callback functions
     glfwSetKeyCallback(window, key_callback);
     
-    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize OpenGL context" << std::endl;
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
+        fprintf( stderr, "Failed to initialize OpenGL context.\n" );
+        getchar();
         return -1;
     }
     
-    float tex_t = 1.0f; 
-    float tex_u = 1.0f;
-    int tex_w = 2048;
-    int tex_h = 2048;
-    int internalGlDataType = GL_RGB;
-	int glDataType = GL_RGB;
-    int w, h;
+    // Dark blue background
+    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
     
-    GLuint* myTex1 = new GLuint[1];
+    // Create and compile our GLSL program from the shaders
+	GLuint programID = LoadShaders( "vertexshader", "fragmentshader" );
     
-    glGenTextures(1, myTex1);
+    static const GLfloat vertices[] = {
+        //     Position       TexCoord
+        -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, // top left
+        1.0f,   1.0f, 0.0f, 1.0f, 1.0f, // top right
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // below left
+        1.0f,  -1.0f, 0.0f, 1.0f, 0.0f  // below right 
+    };
+    // Set up index
+    static const GLuint indices[] = {
+        0, 1, 2,
+        1, 2, 3
+    };
     
-    glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, myTex1[0]);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalGlDataType, tex_w, tex_h, 0, GL_BGR, GL_UNSIGNED_BYTE, 0);  // init to black...
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glDisable(GL_TEXTURE_2D);
+    GLuint* VAO = new GLuint();
+    glGenVertexArrays(1, VAO);
+    glBindVertexArray(*VAO);
     
-    GLuint* myTex2 = new GLuint[1];
+    GLuint* VBO = new GLuint();
+	glGenBuffers(1, VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, *VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
     
-    glGenTextures(1, myTex2);
+    GLuint* EBO = new GLuint();
+    glGenBuffers(1, EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices, GL_STATIC_DRAW);
     
-    glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, myTex2[0]);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalGlDataType, tex_w, tex_h, 0, GL_BGR, GL_UNSIGNED_BYTE, 0);  // init to black...
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glDisable(GL_TEXTURE_2D);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    GLuint* texture = new GLuint();
+    glGenTextures(1, texture);
+    glBindTexture(GL_TEXTURE_2D, *texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
-    // Disable vertical sync (on cards that support it)
-    glfwSwapInterval( 1 );
-	
     // Main loop
-    int frames = 0;
-    double t0 = glfwGetTime();
-    double t;
-    double fps;
+    int nbFrames = 0;
+    double lastTime = glfwGetTime();
     char* titlestr = new char[255];
-    float screenFov = 60.0f;
-    float eyeX;
-	float eyeY;
-    float halfFov = PI * screenFov / 360.0;
-	float theTan = tanf(halfFov);
-    float dist = eyeY / theTan;
-	float nearDist = dist / 10.0;	// near / far clip plane
-	float farDist = dist * 10.0;
-	float aspect;
     
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
         
-        // Get time
-        t = glfwGetTime();
-        
-        // Calculate and display FPS (frames per second)
-        if( (t-t0) > 1.0 || frames == 0 )
-        {
-            fps = (double)frames / (t-t0);
-            sprintf( titlestr, "videoInput Demo App (%.1f FPS)", fps );
+        // Measure speed
+        double currentTime = glfwGetTime();
+        nbFrames++;
+        if( currentTime - lastTime >= 1.0 ) {
+            sprintf( titlestr, "videoInput Demo App (%.1f ms)", 1000.0/double(nbFrames) );
             glfwSetWindowTitle(window, titlestr);
-            t0 = t;
-            frames = 0;
+            nbFrames = 0;
+            lastTime += 1.0;
         }
-        frames ++;
         
 		// Grab a frame
-		//cv::Mat temp;
-		//if (!cap.read(temp)) {
-		//	break;
-		//}
-		//IplImage ipl_img = cvIplImage(temp);
+		if (!camera->read(frame)) {
+			break;
+		}
+		//ipl_img = cvIplImage(frame);
+        
 		//dlib::cv_image<dlib::bgr_pixel> cimg(&ipl_img);
 		
 		// Detect faces 
@@ -159,88 +186,36 @@ int main()
 		//for (unsigned long i = 0; i < faces.size(); ++i)
 		//	shapes.push_back(pose_model(cimg, faces[i]));
 		
-		if ( w > tex_w || h > tex_h) {
-			printf("image data too big - bailing \n");
-			return;
-		}
-		
-		//compute new tex co-ords based on the ratio of data's w, h to texture w,h;
-		tex_t = (float)w / (float)tex_w;
-		tex_u = (float)h / (float)tex_h;
-		
-		// update the texture image:
-		glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, myTex1[0]);
-			glTexSubImage2D(GL_TEXTURE_2D,0,0,0,w,h,glDataType,GL_UNSIGNED_BYTE,data);	
-		glDisable(GL_TEXTURE_2D);
-		
-		glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, myTex2[0]);
-			glTexSubImage2D(GL_TEXTURE_2D,0,0,0,w,h,glDataType,GL_UNSIGNED_BYTE,data);	
-		glDisable(GL_TEXTURE_2D);
-		
-        // Check if any events have been activated (key pressed, mouse moved etc.) and call corresponding response functions
-        glfwPollEvents();
-		
-		// Get window size (may be different than the requested size)
-		glfwGetWindowSize( &w, &h );
-        h = h > 0 ? h : 1;
-		
-		// Define the viewport dimensions
-        glViewport(0, 0, w, h);
-		
-		// Clear the colorbuffer
-        glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+        image = cvMat2TexInput(frame);
+        if(image) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, image);
+        } else {
+            fprintf( stderr, "Failed to load texture.\n" );
+            getchar();
+        }
+        
         glClear(GL_COLOR_BUFFER_BIT);
-		
-        eyeX = (float)w / 2.0;
-        eyeY = (float)h / 2.0;
-        aspect = (float)w/(float)h;
         
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        gluPerspective(screenFov, aspect, nearDist, farDist);
-        gluLookAt(eyeX, eyeY, dist, eyeX, eyeY, 0.0, 0.0, 1.0, 0.0);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
+        // Use our shader
+		glUseProgram(programID);
         
-        glEnable(GL_TEXTURE_2D);
-            // bind the texture
-            glBindTexture( GL_TEXTURE_2D, myTex1[0] );
-        
-            float px0 = x  ;		// up to you to get the aspect ratio right
-            float py0 = y  
-            float px1 = x+w;
-            float py1 = y+h;
-        
-            glBegin( GL_QUADS );
-                glTexCoord2f(0.0,0.0);		glVertex3f(px0, py0,0);
-                glTexCoord2f(tex_t,0.0);	glVertex3f(px1, py0,0);
-                glTexCoord2f(tex_t,tex_u);	glVertex3f(px1, py1,0);
-                glTexCoord2f(0.0,tex_u);	glVertex3f(px0, py1,0);
-            glEnd();
-        glDisable(GL_TEXTURE_2D);
-        glEnable(GL_TEXTURE_2D);
-            // bind the texture
-            glBindTexture( GL_TEXTURE_2D, myTex2[0] );
-        
-            float px0 = x  ;		// up to you to get the aspect ratio right
-            float py0 = y  
-            float px1 = x+w;
-            float py1 = y+h;
-        
-            glBegin( GL_QUADS );
-                glTexCoord2f(0.0,0.0);		glVertex3f(px0, py0,0);
-                glTexCoord2f(tex_t,0.0);	glVertex3f(px1, py0,0);
-                glTexCoord2f(tex_t,tex_u);	glVertex3f(px1, py1,0);
-                glTexCoord2f(0.0,tex_u);	glVertex3f(px0, py1,0);
-            glEnd();
-        glDisable(GL_TEXTURE_2D);
+        // 1rst attribute buffer : vertices
+		glBindTexture(GL_TEXTURE_2D, *texture);
+        glBindVertexArray(*VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
-
+        
+        // Check if any events have been activated (key pressed, mouse moved etc.) and call corresponding response functions
+        glfwPollEvents();
     }
+    
+    // Cleanup VBO
+	glDeleteBuffers(1, VBO);
+    glDeleteBuffers(1, EBO);
+	glDeleteVertexArrays(1, VAO);
+	glDeleteProgram(programID);
 
     // Terminates GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();

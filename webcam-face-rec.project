@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Project Name="webcam-face-rec" Version="11000" InternalType="Console">
+  <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00030001N0005Debug0000000000000001N0011linux_debug0000000000000001N0013windows_debug000000000000]]>
+    </Plugin>
+  </Plugins>
   <Reconciliation>
     <Regexes/>
     <Excludepaths/>
@@ -9,14 +14,10 @@
     </Extensions>
     <Topleveldir>/src/workspaceCL/webcam-face-rec/webcam-face-rec</Topleveldir>
   </Reconciliation>
-  <Plugins>
-    <Plugin Name="qmake">
-      <![CDATA[00030001N0005Debug0000000000000001N0011linux_debug0000000000000001N0013windows_debug000000000000]]>
-    </Plugin>
-  </Plugins>
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="src/shader.cpp"/>
     <File Name="src/glad.c"/>
     <File Name="src/main.cpp"/>
   </VirtualDirectory>
@@ -125,7 +126,7 @@
       </Compiler>
       <Linker Options="-Wl,-rpath,\$$ORIGIN/../../../lib" Required="yes">
         <LibraryPath Value="/usr/lib"/>
-        <LibraryPath Value="./lib"/>
+        <LibraryPath Value="./linux/lib"/>
         <Library Value="dl"/>
         <Library Value="glfw"/>
         <Library Value="dlib"/>
@@ -174,12 +175,13 @@
       </Compiler>
       <Linker Options="" Required="yes">
         <LibraryPath Value="/usr/lib"/>
-        <LibraryPath Value="./lib"/>
+        <LibraryPath Value="./windows/lib"/>
+        <Library Value="glm"/>
         <Library Value="glfw3"/>
         <Library Value="dlib"/>
-        <Library Value="libopencv_core420"/>
-        <Library Value="libopencv_highgui420"/>
-        <Library Value="libopencv_videoio420"/>
+        <Library Value="opencv_core420"/>
+        <Library Value="opencv_imgproc420"/>
+        <Library Value="opencv_videoio420"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="output/$(ConfigurationName)" Command="$(OutputFile)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="" PauseExecWhenProcTerminates="yes" IsGUIProgram="yes" IsEnabled="yes"/>
@@ -193,7 +195,10 @@
         <StartupCommands/>
       </Debugger>
       <PreBuild/>
-      <PostBuild/>
+      <PostBuild>
+        <Command Enabled="yes">copy .\windows\lib\* .\output\$(ConfigurationName)</Command>
+        <Command Enabled="yes">copy .\data\* .\output\$(ConfigurationName)</Command>
+      </PostBuild>
       <CustomBuild Enabled="no">
         <RebuildCommand/>
         <CleanCommand/>
