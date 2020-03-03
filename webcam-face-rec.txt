@@ -1,1 +1,0 @@
-output/windows_debug/src_main.cpp.o output/windows_debug/src_shader.cpp.o output/windows_debug/src_glad.c.o   
