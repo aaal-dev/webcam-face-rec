@@ -11,7 +11,7 @@ GLFWwindow* window;
 #include <glm/glm.hpp>
 
 // OpenCV
-#include <opencv2/opencv.hpp>
+#include <opencv2/videoio.hpp>
 #include <opencv2/imgproc.hpp>
 
 // dlib
@@ -29,36 +29,54 @@ GLFWwindow* window;
 const GLuint DEFAULT_WIDTH = 800, DEFAULT_HEIGHT = 600;
 
 // Is called whenever a key is pressed/released via GLFW
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+{
     std::cout << key << std::endl;
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
     (void)window;
     glViewport(0, 0, width, height);
 }
 
-GLboolean* cvMat2TexInput(cv::Mat& img) {
+GLboolean* cvMat2TexInput(cv::Mat& img)
+{
     cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
     cv::flip(img, img, -1);
     return img.data;
 }
 
-int main() {    
-    cv::VideoCapture* camera = new cv::VideoCapture(0);
-	if (!camera->isOpened()) {
-		fprintf( stderr, "Unable to connect to camera.\n");
+int main() 
+{   
+	// Initialise GLFW
+	if(!glfwInit())
+	{
+		fprintf( stderr, "Failed to initialize GLFW\n" );
+		getchar();
+		return -1;
+	}
+    
+	// Set all the required options for GLFW
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    #ifdef __APPLE__
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    #endif 
+    
+	cv::VideoCapture* camera = new cv::VideoCapture(0);
+	if (!camera->isOpened())
+	{
+		fprintf( stderr, "Unable to connect to camera.\n" );
         getchar();
 		return 1;
 	}
     cv::Mat frame;
-    if (!camera->read(frame)) {
-		fprintf( stderr, "Unable to get frame from camera.\n");
-        getchar();
-		return 1;
-    }
+	
+    *camera >> frame;
     
     int width = frame.cols;
     int height = frame.rows;
@@ -69,24 +87,8 @@ int main() {
 	dlib::shape_predictor pose_model;
 	dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> pose_model;
 
-    std::cout << "Starting GLFW context, OpenGL 3.3" << std::endl;
+    fprintf( stdout, "Starting GLFW context, OpenGL 3.3...\n" );
     
-    // Initialise GLFW
-	if(!glfwInit()) {
-		fprintf( stderr, "Failed to initialize GLFW\n" );
-		getchar();
-		return -1;
-	}
-    
-	// Set all the required options for GLFW
-    glfwWindowHint(GLFW_SAMPLES, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    #ifdef __APPLE__
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    #endif 
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
     window = glfwCreateWindow(width, height, "Face", NULL, NULL);
     if (window == NULL) {
         fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
@@ -105,19 +107,18 @@ int main() {
         getchar();
         return -1;
     }
-    
-    // Dark blue background
-    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+
+    glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
     
     // Create and compile our GLSL program from the shaders
 	GLuint programID = LoadShaders( "vertexshader", "fragmentshader" );
     
     static const GLfloat vertices[] = {
         //     Position       TexCoord
-        -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, // top left
-        1.0f,   1.0f, 0.0f, 1.0f, 1.0f, // top right
-        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // below left
-        1.0f,  -1.0f, 0.0f, 1.0f, 0.0f  // below right 
+       -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, // top left
+        1.0f,  1.0f, 0.0f, 1.0f, 1.0f, // top right
+       -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // below left
+        1.0f, -1.0f, 0.0f, 1.0f, 0.0f  // below right 
     };
     // Set up index
     static const GLuint indices[] = {
@@ -139,14 +140,18 @@ int main() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices, GL_STATIC_DRAW);
     
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(float)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
-    GLuint* texture = new GLuint();
-    glGenTextures(1, texture);
-    glBindTexture(GL_TEXTURE_2D, *texture);
+    GLuint* texture0 = new GLuint();
+    glGenTextures(1, texture0);
+    glBindTexture(GL_TEXTURE_2D, *texture0);
+	
+	GLuint* texture1 = new GLuint();
+    glGenTextures(1, texture1);
+    glBindTexture(GL_TEXTURE_2D, *texture1);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -171,38 +176,45 @@ int main() {
         }
         
 		// Grab a frame
-		if (!camera->read(frame)) {
-			break;
-		}
-		//ipl_img = cvIplImage(frame);
+		*camera >> frame;
+		
+		ipl_img = cvIplImage(frame);
         
-		//dlib::cv_image<dlib::bgr_pixel> cimg(&ipl_img);
+		dlib::cv_image<dlib::bgr_pixel> cimg(&ipl_img);
 		
 		// Detect faces 
-		//std::vector<dlib::rectangle> faces = detector(cimg);
+		std::vector<dlib::rectangle> faces = detector(cimg);
 		
 		// Find the pose of each face.
-		//std::vector<dlib::full_object_detection> shapes;
-		//for (unsigned long i = 0; i < faces.size(); ++i)
-		//	shapes.push_back(pose_model(cimg, faces[i]));
-		
+		std::vector<dlib::full_object_detection> shapes;
+		for (unsigned long i = 0; i < faces.size(); ++i)
+			shapes.push_back(pose_model(cimg, faces[i]));
+		cv::Mat frame2 = dlib::toMat(render_face_detections(shapes));
         image = cvMat2TexInput(frame);
         if(image) {
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, image);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, cvMat2TexInput(frame2));
         } else {
             fprintf( stderr, "Failed to load texture.\n" );
             getchar();
         }
-        
+		
+        glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        
+		        
         // Use our shader
 		glUseProgram(programID);
         
-        // 1rst attribute buffer : vertices
-		glBindTexture(GL_TEXTURE_2D, *texture);
+        // 1st attribute buffer : vertices
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, *texture0);
+		glUniform1i(glGetUniformLocation(programID, "texture0"), 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, *texture1);
+		glUniform1i(glGetUniformLocation(programID, "texture1"), 1);
         glBindVertexArray(*VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
