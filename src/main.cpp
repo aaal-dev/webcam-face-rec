@@ -145,13 +145,9 @@ int main()
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
-    GLuint* texture0 = new GLuint();
-    glGenTextures(1, texture0);
-    glBindTexture(GL_TEXTURE_2D, *texture0);
-	
-	GLuint* texture1 = new GLuint();
-    glGenTextures(1, texture1);
-    glBindTexture(GL_TEXTURE_2D, *texture1);
+    GLuint* texture = new GLuint();
+    glGenTextures(1, texture);
+    glBindTexture(GL_TEXTURE_2D, *texture);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -179,7 +175,6 @@ int main()
 		*camera >> frame;
 		
 		ipl_img = cvIplImage(frame);
-        
 		dlib::cv_image<dlib::bgr_pixel> cimg(&ipl_img);
 		
 		// Detect faces 
@@ -189,11 +184,83 @@ int main()
 		std::vector<dlib::full_object_detection> shapes;
 		for (unsigned long i = 0; i < faces.size(); ++i)
 			shapes.push_back(pose_model(cimg, faces[i]));
-		cv::Mat frame2 = dlib::toMat(render_face_detections(shapes));
+        
+        if (!shapes.empty())
+        {    
+            //for (int i = 27; i < 68; i++)
+            //{
+            //    cv::circle(frame, cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 2, cv::Scalar(255, 255, 255), -1);
+            //    cv::putText(frame, std::to_string(i), cvPoint(shapes[0].part(i).x()-5, shapes[0].part(i).y()-5), cv::FONT_HERSHEY_SIMPLEX, 0.25, cv::Scalar(255, 127, 127), 1);
+            //}
+            for (int i = 0; i < 16; i++)
+            {
+                cv::line(
+                    frame, 
+                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+                    cv::Scalar(255, 255, 255), 1);
+            }
+            for (int i = 17; i < 21; i++)
+            {
+                cv::line(
+                    frame, 
+                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+                    cv::Scalar(255, 255, 255), 1);
+            }
+            for (int i = 22; i < 26; i++)
+            {
+                cv::line(
+                    frame, 
+                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+                    cv::Scalar(255, 255, 255), 1);
+            }
+            for (int i = 27; i < 35; i++)
+            {
+                cv::line(
+                    frame, 
+                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+                    cv::Scalar(255, 255, 255), 1);
+            }
+            for (int i = 36; i < 41; i++)
+            {
+                cv::line(
+                    frame, 
+                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+                    cv::Scalar(255, 255, 255), 1);
+            }
+            for (int i = 42; i < 47; i++)
+            {
+                cv::line(
+                    frame, 
+                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+                    cv::Scalar(255, 255, 255), 1);
+            }
+            for (int i = 48; i < 59; i++)
+            {
+                cv::line(
+                    frame, 
+                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+                    cv::Scalar(255, 255, 255), 1);
+            }
+            for (int i = 60; i < 67; i++)
+            {
+                cv::line(
+                    frame, 
+                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+                    cv::Scalar(255, 255, 255), 1);
+            }
+        }
+        
         image = cvMat2TexInput(frame);
         if(image) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, image);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, cvMat2TexInput(frame2));
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
         } else {
             fprintf( stderr, "Failed to load texture.\n" );
             getchar();
@@ -206,12 +273,7 @@ int main()
 		glUseProgram(programID);
         
         // 1st attribute buffer : vertices
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, *texture0);
-		glUniform1i(glGetUniformLocation(programID, "texture0"), 0);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, *texture1);
-		glUniform1i(glGetUniformLocation(programID, "texture1"), 1);
+        glBindTexture(GL_TEXTURE_2D, *texture);
         glBindVertexArray(*VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
@@ -228,6 +290,8 @@ int main()
     glDeleteBuffers(1, EBO);
 	glDeleteVertexArrays(1, VAO);
 	glDeleteProgram(programID);
+    
+    camera->release();
 
     // Terminates GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
