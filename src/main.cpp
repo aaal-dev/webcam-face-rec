@@ -187,12 +187,26 @@ int main()
         
         if (!shapes.empty())
         {    
-            //for (int i = 27; i < 68; i++)
+            // Simple visualization of face detection
+			//for (int i = 27; i < 68; i++)
             //{
             //    cv::circle(frame, cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 2, cv::Scalar(255, 255, 255), -1);
             //    cv::putText(frame, std::to_string(i), cvPoint(shapes[0].part(i).x()-5, shapes[0].part(i).y()-5), cv::FONT_HERSHEY_SIMPLEX, 0.25, cv::Scalar(255, 127, 127), 1);
             //}
-            for (int i = 0; i < 16; i++)
+            
+			// Advanced visualization of face detection
+			// Shape of face (parts 0-16)
+			for (int i = 0; i < 16; i++)
+            {
+                cv::line(
+                    frame, 
+                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+                    cv::Scalar(127, 127, 127), 1);
+            }
+            
+			// Left eyebrow shape (parts 17-21)
+			for (int i = 17; i < 21; i++)
             {
                 cv::line(
                     frame, 
@@ -200,7 +214,9 @@ int main()
                     cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
                     cv::Scalar(255, 255, 255), 1);
             }
-            for (int i = 17; i < 21; i++)
+            
+			// Right eyebrow shape (parts 22-26)
+			for (int i = 22; i < 26; i++)
             {
                 cv::line(
                     frame, 
@@ -208,53 +224,91 @@ int main()
                     cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
                     cv::Scalar(255, 255, 255), 1);
             }
-            for (int i = 22; i < 26; i++)
+            
+			// Nose shape (parts 27-35)
+			for (int i = 27; i < 35; i++)
             {
                 cv::line(
                     frame, 
                     cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
                     cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
-                    cv::Scalar(255, 255, 255), 1);
+                    cv::Scalar(127, 127, 127), 1);
             }
-            for (int i = 27; i < 35; i++)
+            
+			// Right eye shape (parts 36-41)
+			for (int i = 36; i < 41; i++)
             {
-                cv::line(
-                    frame, 
-                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
-                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
-                    cv::Scalar(255, 255, 255), 1);
+                if ( i == 40) 
+				{
+					cv::line(
+						frame, 
+						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+						cvPoint(shapes[0].part(36).x(), shapes[0].part(36).y()), 
+						cv::Scalar(0, 0, 255), 1);
+				} else {
+					cv::line(
+						frame, 
+						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+						cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+						cv::Scalar(127, 200, 255), 1);
+				}
             }
-            for (int i = 36; i < 41; i++)
+            
+			// Left eye shape (parts 42-47)
+			for (int i = 42; i < 47; i++)
             {
-                cv::line(
-                    frame, 
-                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
-                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
-                    cv::Scalar(255, 255, 255), 1);
+                if ( i == 46) 
+				{
+					cv::line(
+						frame, 
+						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+						cvPoint(shapes[0].part(42).x(), shapes[0].part(42).y()), 
+						cv::Scalar(0, 255, 0), 1);
+				} else {
+					cv::line(
+						frame, 
+						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+						cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+						cv::Scalar(127, 200, 255), 1);
+				}
             }
-            for (int i = 42; i < 47; i++)
+            
+			// Outer mouth shape (parts 48-59)
+			for (int i = 48; i < 59; i++)
             {
-                cv::line(
-                    frame, 
-                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
-                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
-                    cv::Scalar(255, 255, 255), 1);
+				if ( i == 58) 
+				{
+					cv::line(
+						frame, 
+						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+						cvPoint(shapes[0].part(48).x(), shapes[0].part(48).y()), 
+						cv::Scalar(127, 127, 255), 1);
+				} else {
+					cv::line(
+						frame, 
+						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+						cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+						cv::Scalar(127, 127, 255), 1);
+				}
             }
-            for (int i = 48; i < 59; i++)
+            
+			// Inner mouth shape (parts 60-67)
+			for (int i = 60; i < 68; i++)
             {
-                cv::line(
-                    frame, 
-                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
-                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
-                    cv::Scalar(255, 255, 255), 1);
-            }
-            for (int i = 60; i < 67; i++)
-            {
-                cv::line(
-                    frame, 
-                    cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
-                    cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
-                    cv::Scalar(255, 255, 255), 1);
+                if (i == 67) 
+				{
+					cv::line(
+						frame, 
+						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+						cvPoint(shapes[0].part(60).x(), shapes[0].part(60).y()), 
+						cv::Scalar(127, 127, 255), 1);
+				} else {
+					cv::line(
+						frame, 
+						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+						cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+						cv::Scalar(127, 127, 255), 1);
+				}
             }
         }
         
