@@ -41,13 +41,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-GLboolean* cvMat2TexInput(cv::Mat& img)
-{
-    cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
-    cv::flip(img, img, -1);
-    return img.data;
-}
-
 int main() 
 {   
 	// Initialise GLFW
@@ -173,9 +166,10 @@ int main()
         
 		// Grab a frame
 		*camera >> frame;
+		cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
 		
 		ipl_img = cvIplImage(frame);
-		dlib::cv_image<dlib::bgr_pixel> cimg(&ipl_img);
+		dlib::cv_image<dlib::rgb_pixel> cimg(&ipl_img);
 		
 		// Detect faces 
 		std::vector<dlib::rectangle> faces = detector(cimg);
@@ -242,20 +236,20 @@ int main()
                 rightEye_y_max = shapes[0].part(36).y();
 			for (int i = 36; i < 41; i++)
             {
-                if ( i == 40) 
-				{
-					cv::line(
-						frame, 
-						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
-						cvPoint(shapes[0].part(36).x(), shapes[0].part(36).y()), 
-						cv::Scalar(0, 0, 255), 1);
-				} else {
-					cv::line(
-						frame, 
-						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
-						cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
-						cv::Scalar(127, 200, 255), 1);
-				}
+                //if ( i == 40) 
+				//{
+				//	cv::line(
+				//		frame, 
+				//		cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+				//		cvPoint(shapes[0].part(36).x(), shapes[0].part(36).y()), 
+				//		cv::Scalar(0, 0, 255), 1);
+				//} else {
+				//	cv::line(
+				//		frame, 
+				//		cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+				//		cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+				//		cv::Scalar(127, 200, 255), 1);
+				//}
                 
                 // Found min and max of x and y for locate right eye
                 if (shapes[0].part(i).x() < rightEye_x_min)
@@ -269,27 +263,27 @@ int main()
             }
             
             // Crop an eye to new frame
-            cv::line(
-                    frame, 
-					cvPoint(rightEye_x_min, rightEye_y_min), 
-					cvPoint(rightEye_x_min, rightEye_y_max), 
-					cv::Scalar(255, 255, 255), 1);
-            cv::line(
-                    frame, 
-					cvPoint(rightEye_x_min, rightEye_y_max), 
-					cvPoint(rightEye_x_max, rightEye_y_max), 
-					cv::Scalar(255, 255, 255), 1);
-            cv::line(
-                    frame, 
-					cvPoint(rightEye_x_max, rightEye_y_max), 
-					cvPoint(rightEye_x_max, rightEye_y_min), 
-					cv::Scalar(255, 255, 255), 1);
-            cv::line(
-                    frame, 
-					cvPoint(rightEye_x_max, rightEye_y_min), 
-					cvPoint(rightEye_x_min, rightEye_y_min), 
-					cv::Scalar(255, 255, 255), 1);
-            cv::Mat rightEye = frame(cv::Rect(rightEye_x_min, rightEye_y_min, rightEye_x_max - rightEye_x_min, rightEye_y_max - rightEye_y_min));
+            //cv::line(
+            //        frame, 
+			//		cvPoint(rightEye_x_min, rightEye_y_min), 
+			//		cvPoint(rightEye_x_min, rightEye_y_max), 
+			//		cv::Scalar(255, 255, 255), 1);
+            //cv::line(
+            //        frame, 
+			//		cvPoint(rightEye_x_min, rightEye_y_max), 
+			//		cvPoint(rightEye_x_max, rightEye_y_max), 
+			//		cv::Scalar(255, 255, 255), 1);
+            //cv::line(
+            //        frame, 
+			//		cvPoint(rightEye_x_max, rightEye_y_max), 
+			//		cvPoint(rightEye_x_max, rightEye_y_min), 
+			//		cv::Scalar(255, 255, 255), 1);
+            //cv::line(
+            //        frame, 
+			//		cvPoint(rightEye_x_max, rightEye_y_min), 
+			//		cvPoint(rightEye_x_min, rightEye_y_min), 
+			//		cv::Scalar(255, 255, 255), 1);
+            //cv::Mat rightEye = frame(cv::Rect(rightEye_x_min, rightEye_y_min, rightEye_x_max - rightEye_x_min, rightEye_y_max - rightEye_y_min));
             
             
 			// Left eye shape (parts 42-47)
@@ -299,20 +293,20 @@ int main()
                 leftEye_y_max = shapes[0].part(42).y();
 			for (int i = 42; i < 47; i++)
             {
-                if ( i == 46) 
-				{
-					cv::line(
-						frame, 
-						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
-						cvPoint(shapes[0].part(42).x(), shapes[0].part(42).y()), 
-						cv::Scalar(0, 255, 0), 1);
-				} else {
-					cv::line(
-						frame, 
-						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
-						cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
-						cv::Scalar(127, 200, 255), 1);
-				}
+                //if ( i == 46) 
+				//{
+				//	cv::line(
+				//		frame, 
+				//		cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+				//		cvPoint(shapes[0].part(42).x(), shapes[0].part(42).y()), 
+				//		cv::Scalar(0, 255, 0), 1);
+				//} else {
+				//	cv::line(
+				//		frame, 
+				//		cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
+				//		cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
+				//		cv::Scalar(127, 200, 255), 1);
+				//}
                 if (shapes[0].part(i).x() < leftEye_x_min)
                     leftEye_x_min = shapes[0].part(i).x();
                 if (shapes[0].part(i).x() > leftEye_x_max)
@@ -324,47 +318,59 @@ int main()
             }
             
             // Crop an eye to new frame
-            cv::line(
-                    frame, 
+            //cv::line(
+            //       frame, 
+			//		cvPoint(leftEye_x_min, leftEye_y_min), 
+			//		cvPoint(leftEye_x_min, leftEye_y_max), 
+			//		cv::Scalar(0, 0, 255), 1);
+			cv::putText(
+					frame, 
+					std::to_string(leftEye_x_min) + ":" + std::to_string(leftEye_y_min), 
 					cvPoint(leftEye_x_min, leftEye_y_min), 
-					cvPoint(leftEye_x_min, leftEye_y_max), 
-					cv::Scalar(255, 255, 255), 1);
-            cv::line(
-                    frame, 
-					cvPoint(leftEye_x_min, leftEye_y_max), 
+					cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 127, 127), 1);
+			cv::putText(
+					frame, 
+					std::to_string(leftEye_x_max) + ":" + std::to_string(leftEye_y_max), 
 					cvPoint(leftEye_x_max, leftEye_y_max), 
-					cv::Scalar(255, 255, 255), 1);
-            cv::line(
-                    frame, 
-					cvPoint(leftEye_x_max, leftEye_y_max), 
-					cvPoint(leftEye_x_max, leftEye_y_min), 
-					cv::Scalar(255, 255, 255), 1);
-            cv::line(
-                    frame, 
-					cvPoint(leftEye_x_max, leftEye_y_min), 
-					cvPoint(leftEye_x_min, leftEye_y_min), 
-					cv::Scalar(255, 255, 255), 1);
-            cv::Mat leftEye = frame(cv::Rect(leftEye_x_min, leftEye_y_min, leftEye_x_max - leftEye_x_min, leftEye_y_max - leftEye_y_min));
-            cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7), cv::Point(3, 3));
+					cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(127, 127, 255), 1);		
+            //cv::line(
+            //        frame, 
+			//		cvPoint(leftEye_x_min, leftEye_y_max), 
+			//		cvPoint(leftEye_x_max, leftEye_y_max), 
+			//		cv::Scalar(255, 0, 0), 1);
+            //cv::line(
+            //        frame, 
+			//		cvPoint(leftEye_x_max, leftEye_y_max), 
+			//		cvPoint(leftEye_x_max, leftEye_y_min), 
+			//		cv::Scalar(0, 255, 0), 1);
+            //cv::line(
+            //        frame, 
+			//		cvPoint(leftEye_x_max, leftEye_y_min), 
+			//		cvPoint(leftEye_x_min, leftEye_y_min), 
+			//		cv::Scalar(255, 255, 255), 1);
+            cv::Mat leftEye = frame(cv::Rect(cv::Point(leftEye_x_max, leftEye_y_max), cv::Point(leftEye_x_min, leftEye_y_min)));
+			//cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7), cv::Point(3, 3));
 
-            double threshold = 0;
-            for (int threshold : {5, 100, 5})
-            {
-                cv::Mat tleftEye;
-                cv::bilateralFilter(leftEye, tleftEye, 5, 100, 5, cv::BORDER_DEFAULT);
-                cv::erode(tleftEye, tleftEye, kernel);
-                cv::threshold(tleftEye, tleftEye, threshold, 255, cv::THRESH_BINARY);
-                double tthreshold = ((tleftEye.cols * tleftEye.rows) - cv::countNonZero(tleftEye))/(tleftEye.cols * tleftEye.rows);
-                if (tthreshold < threshold)
-                    threshold = tthreshold;
-            }
-            
-            cv::bilateralFilter(leftEye, leftEye, 5, 100, 5, cv::BORDER_DEFAULT);
-            cv::erode(leftEye, leftEye, kernel);
-            cv::threshold(leftEye, leftEye, threshold, 255, cv::THRESH_BINARY);
-            std::vector< std::vector<cv::Point> > contours;
-            cv::findContours(leftEye, contours, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
-            cv::drawContours(frame, contours, -1, cv::Scalar(255, 255, 255), 1, 8, cv::noArray(), INT_MAX,cv::Point(leftEye_x_min,leftEye_y_min));
+            //double threshold = 0;
+            //for (int threshold : {5, 100, 5})
+            //{
+            //    cv::Mat ttleftEye, tleftEye;
+			//	cv::cvtColor(leftEye, ttleftEye, cv::COLOR_RGB2GRAY);
+            //    cv::bilateralFilter(ttleftEye, tleftEye, 5, 100, 5, cv::BORDER_DEFAULT);
+            //    cv::erode(tleftEye, tleftEye, kernel);
+            //    cv::threshold(tleftEye, tleftEye, threshold, 255, cv::THRESH_BINARY);
+            //    double tthreshold = ((tleftEye.cols * tleftEye.rows) - cv::countNonZero(tleftEye))/(tleftEye.cols * tleftEye.rows);
+            //    if (tthreshold < threshold)
+            //        threshold = tthreshold;
+            //}
+            //cv::Mat ttleftEye, tleftEye;
+			//cv::cvtColor(leftEye, ttleftEye, cv::COLOR_RGB2GRAY);
+            //cv::bilateralFilter(ttleftEye, tleftEye, 5, 100, 5, cv::BORDER_DEFAULT);
+            //cv::erode(tleftEye, tleftEye, kernel);
+            //cv::threshold(tleftEye, tleftEye, threshold, 255, cv::THRESH_BINARY);
+            //std::vector< std::vector<cv::Point> > contours;
+            //cv::findContours(tleftEye, contours, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+            //cv::drawContours(frame, contours, -1, cv::Scalar(255, 255, 255), 1, 8, cv::noArray(), INT_MAX,cv::Point(leftEye_x_min,leftEye_y_min));
             
             
 			// Outer mouth shape (parts 48-59)
@@ -378,7 +384,7 @@ int main()
 						cvPoint(shapes[0].part(48).x(), shapes[0].part(48).y()), 
 						cv::Scalar(127, 127, 255), 1);
 				} else {
-					cv::line(
+					cv::line(		
 						frame, 
 						cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 
 						cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
@@ -404,10 +410,15 @@ int main()
 						cv::Scalar(127, 127, 255), 1);
 				}
             }
+			frame = leftEye;
         }
-        
-        image = cvMat2TexInput(frame);
+
+		cv::flip(frame, frame, -1);
+		image = frame.data;
+		width = frame.cols;
+		height = frame.rows;
         if(image) {
+			//glViewport(0, 0, width, height);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
         } else {
             fprintf( stderr, "Failed to load texture.\n" );
