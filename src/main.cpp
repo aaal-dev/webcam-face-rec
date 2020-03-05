@@ -4,7 +4,7 @@
 #include "glad/glad.h"
 
 // GLFW
-#include "GLFW/glfw3.h"
+#include <GLFW/glfw3.h>
 GLFWwindow* window;
 
 // Include GLM
@@ -19,9 +19,8 @@ GLFWwindow* window;
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <dlib/image_processing/render_face_detections.h>
 #include <dlib/image_processing.h>
-#include <dlib/gui_widgets.h>
 
-#include <common/shader.hpp>
+#include "common/shader.hpp"
 
 #define     PI  3.141592654
 
@@ -74,15 +73,16 @@ int main()
         getchar();
 		return 1;
 	}
+    
     cv::Mat frame;
+    GLboolean* image;
+    IplImage ipl_img;
 	
     *camera >> frame;
     
     int width = frame.cols;
     int height = frame.rows;
-    GLboolean* image = cvMat2TexInput(frame);
-    IplImage ipl_img = cvIplImage(frame);
-	
+    	
 	dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
 	dlib::shape_predictor pose_model;
 	dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> pose_model;
@@ -188,7 +188,7 @@ int main()
         if (!shapes.empty())
         {    
             // Simple visualization of face detection
-			//for (int i = 27; i < 68; i++)
+			//for (int i = 17; i < 68; i++)
             //{
             //    cv::circle(frame, cvPoint(shapes[0].part(i).x(), shapes[0].part(i).y()), 2, cv::Scalar(255, 255, 255), -1);
             //    cv::putText(frame, std::to_string(i), cvPoint(shapes[0].part(i).x()-5, shapes[0].part(i).y()-5), cv::FONT_HERSHEY_SIMPLEX, 0.25, cv::Scalar(255, 127, 127), 1);
@@ -205,7 +205,7 @@ int main()
                     cv::Scalar(127, 127, 127), 1);
             }
             
-			// Left eyebrow shape (parts 17-21)
+			// Right eyebrow shape (parts 17-21)
 			for (int i = 17; i < 21; i++)
             {
                 cv::line(
@@ -215,7 +215,7 @@ int main()
                     cv::Scalar(255, 255, 255), 1);
             }
             
-			// Right eyebrow shape (parts 22-26)
+			// Left eyebrow shape (parts 22-26)
 			for (int i = 22; i < 26; i++)
             {
                 cv::line(
@@ -236,6 +236,10 @@ int main()
             }
             
 			// Right eye shape (parts 36-41)
+            long int rightEye_x_min = shapes[0].part(36).x(), 
+                rightEye_x_max = shapes[0].part(36).x(), 
+                rightEye_y_min = shapes[0].part(36).y(), 
+                rightEye_y_max = shapes[0].part(36).y();
 			for (int i = 36; i < 41; i++)
             {
                 if ( i == 40) 
@@ -252,9 +256,47 @@ int main()
 						cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
 						cv::Scalar(127, 200, 255), 1);
 				}
+                
+                // Found min and max of x and y for locate right eye
+                if (shapes[0].part(i).x() < rightEye_x_min)
+                    rightEye_x_min = shapes[0].part(i).x();
+                if (shapes[0].part(i).x() > rightEye_x_max)
+                    rightEye_x_max = shapes[0].part(i).x();
+                if (shapes[0].part(i).y() < rightEye_y_min)
+                    rightEye_y_min = shapes[0].part(i).y();
+                if (shapes[0].part(i).y() > rightEye_y_max)
+                    rightEye_y_max = shapes[0].part(i).y();
             }
             
+            // Crop an eye to new frame
+            cv::line(
+                    frame, 
+					cvPoint(rightEye_x_min, rightEye_y_min), 
+					cvPoint(rightEye_x_min, rightEye_y_max), 
+					cv::Scalar(255, 255, 255), 1);
+            cv::line(
+                    frame, 
+					cvPoint(rightEye_x_min, rightEye_y_max), 
+					cvPoint(rightEye_x_max, rightEye_y_max), 
+					cv::Scalar(255, 255, 255), 1);
+            cv::line(
+                    frame, 
+					cvPoint(rightEye_x_max, rightEye_y_max), 
+					cvPoint(rightEye_x_max, rightEye_y_min), 
+					cv::Scalar(255, 255, 255), 1);
+            cv::line(
+                    frame, 
+					cvPoint(rightEye_x_max, rightEye_y_min), 
+					cvPoint(rightEye_x_min, rightEye_y_min), 
+					cv::Scalar(255, 255, 255), 1);
+            cv::Mat rightEye = frame(cv::Rect(rightEye_x_min, rightEye_y_min, rightEye_x_max - rightEye_x_min, rightEye_y_max - rightEye_y_min));
+            
+            
 			// Left eye shape (parts 42-47)
+            long int leftEye_x_min = shapes[0].part(42).x(), 
+                leftEye_x_max = shapes[0].part(42).x(), 
+                leftEye_y_min = shapes[0].part(42).y(), 
+                leftEye_y_max = shapes[0].part(42).y();
 			for (int i = 42; i < 47; i++)
             {
                 if ( i == 46) 
@@ -271,7 +313,59 @@ int main()
 						cvPoint(shapes[0].part(i+1).x(), shapes[0].part(i+1).y()), 
 						cv::Scalar(127, 200, 255), 1);
 				}
+                if (shapes[0].part(i).x() < leftEye_x_min)
+                    leftEye_x_min = shapes[0].part(i).x();
+                if (shapes[0].part(i).x() > leftEye_x_max)
+                    leftEye_x_max = shapes[0].part(i).x();
+                if (shapes[0].part(i).y() < leftEye_y_min)
+                    leftEye_y_min = shapes[0].part(i).y();
+                if (shapes[0].part(i).y() > leftEye_y_max)
+                    leftEye_y_max = shapes[0].part(i).y();
             }
+            
+            // Crop an eye to new frame
+            cv::line(
+                    frame, 
+					cvPoint(leftEye_x_min, leftEye_y_min), 
+					cvPoint(leftEye_x_min, leftEye_y_max), 
+					cv::Scalar(255, 255, 255), 1);
+            cv::line(
+                    frame, 
+					cvPoint(leftEye_x_min, leftEye_y_max), 
+					cvPoint(leftEye_x_max, leftEye_y_max), 
+					cv::Scalar(255, 255, 255), 1);
+            cv::line(
+                    frame, 
+					cvPoint(leftEye_x_max, leftEye_y_max), 
+					cvPoint(leftEye_x_max, leftEye_y_min), 
+					cv::Scalar(255, 255, 255), 1);
+            cv::line(
+                    frame, 
+					cvPoint(leftEye_x_max, leftEye_y_min), 
+					cvPoint(leftEye_x_min, leftEye_y_min), 
+					cv::Scalar(255, 255, 255), 1);
+            cv::Mat leftEye = frame(cv::Rect(leftEye_x_min, leftEye_y_min, leftEye_x_max - leftEye_x_min, leftEye_y_max - leftEye_y_min));
+            cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7), cv::Point(3, 3));
+
+            double threshold = 0;
+            for (int threshold : {5, 100, 5})
+            {
+                cv::Mat tleftEye;
+                cv::bilateralFilter(leftEye, tleftEye, 5, 100, 5, cv::BORDER_DEFAULT);
+                cv::erode(tleftEye, tleftEye, kernel);
+                cv::threshold(tleftEye, tleftEye, threshold, 255, cv::THRESH_BINARY);
+                double tthreshold = ((tleftEye.cols * tleftEye.rows) - cv::countNonZero(tleftEye))/(tleftEye.cols * tleftEye.rows);
+                if (tthreshold < threshold)
+                    threshold = tthreshold;
+            }
+            
+            cv::bilateralFilter(leftEye, leftEye, 5, 100, 5, cv::BORDER_DEFAULT);
+            cv::erode(leftEye, leftEye, kernel);
+            cv::threshold(leftEye, leftEye, threshold, 255, cv::THRESH_BINARY);
+            std::vector< std::vector<cv::Point> > contours;
+            cv::findContours(leftEye, contours, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+            cv::drawContours(frame, contours, -1, cv::Scalar(255, 255, 255), 1, 8, cv::noArray(), INT_MAX,cv::Point(leftEye_x_min,leftEye_y_min));
+            
             
 			// Outer mouth shape (parts 48-59)
 			for (int i = 48; i < 59; i++)
