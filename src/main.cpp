@@ -1,4 +1,5 @@
 //#include <iostream>
+#include <string>
 
 // GLAD
 #include "glad/glad.h"
@@ -259,7 +260,6 @@ int main()
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	#endif 
 	
-	live2d::Live2DModelOpenGL* live2DModel;
 	
 	cv::VideoCapture* camera = new cv::VideoCapture(0);
 	if (!camera->isOpened())
@@ -330,9 +330,9 @@ int main()
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 
-	GLuint* texture = new GLuint();
-	glGenTextures(1, texture);
-	glBindTexture(GL_TEXTURE_2D, *texture);
+	GLuint* webcamTexture = new GLuint();
+	glGenTextures(1, webcamTexture);
+	glBindTexture(GL_TEXTURE_2D, *webcamTexture);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -346,6 +346,22 @@ int main()
 											  
 	float fltMeasurementMatrixValues[2][4] = { { 1, 0, 0, 0 },
 											   { 0, 1, 0, 0 } };
+	
+	GLuint* modelTexture = new GLuint();
+	glGenTextures(1, modelTexture);
+	glBindTexture(GL_TEXTURE_2D, *modelTexture);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	
+	live2d::Live2DModelOpenGL* live2DModel;
+	//std::string path = "model/Epsilon/";
+	//live2DModel = live2d::Live2DModelOpenGL::loadModel((char*)((path + "Epsilon.moc").data()));
+	live2DModel = live2d::Live2DModelOpenGL::loadModel((char*)("model/Epsilon/Epsilon.moc"));
+	
+	
+	
+	live2DModel->setPremultipliedAlpha(false);
 	
 	// Kalman 
 	for (int i=0; i<68; i++)
@@ -416,7 +432,7 @@ int main()
 
 		
 		glfwMakeContextCurrent(window1);
-		glBindTexture(GL_TEXTURE_2D, *texture);
+		glBindTexture(GL_TEXTURE_2D, *webcamTexture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame.cols, frame.rows, 0, GL_RED, GL_UNSIGNED_BYTE, frame.data);
 		glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);

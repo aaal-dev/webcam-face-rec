@@ -17,10 +17,6 @@
 #include <OpenGLES/ES2/glext.h>
 #endif
 
-#ifdef L2D_TARGET_WIN_GL
-#include <windows.h>
-#include <GL/gl.h>
-#endif
 //#ifdef  L2D_GRAPHICS_OPENGL_ES2
 //------------ LIVE2D NAMESPACE ------------
 namespace live2d

@@ -10,7 +10,6 @@
 #define __Live2D__DrawProfileCocos2D__
 #include "../Live2D.h"
 
-#if defined(L2D_TARGET_IPHONE_ES2) || defined(L2D_TARGET_ANDROID_ES2) || defined(L2D_TARGET_WIN_GL)
 //------------ LIVE2D NAMESPACE ------------
 namespace live2d
 {
@@ -23,8 +22,5 @@ namespace live2d
 	
 }
 //------------ LIVE2D NAMESPACE ------------
-
-#endif //L2D_TARGET_IPHONE_ES2
-
 
 #endif /* defined(__Live2D__DrawProfileCocos2D__) */

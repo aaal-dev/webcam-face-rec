@@ -12,37 +12,6 @@
 //  Compile target
 // 	（プロジェクトに定義しない場合#if内をコメントを外す)
 //========================================================
-#if !( defined(L2D_TARGET_PSP) \
-		|| defined(L2D_TARGET_IPHONE)	   \
-		|| defined(L2D_TARGET_IPHONE_ES2) 	\
-		|| defined(L2D_TARGET_MAC_OSX) 		\
-		|| defined(L2D_TARGET_ANDROID) 	\
-		|| defined(L2D_TARGET_ANDROID_ES2) 	\
-		|| defined(L2D_TARGET_QT) 			\
-		|| defined(L2D_TARGET_D3D) 			\
-		|| defined(L2D_TARGET_D3D11) 		\
-		|| defined(L2D_TARGET_WIN_GL) 		\
-		|| defined(L2D_TARGET_3DS)		  \
-		|| defined(L2D_TARGET_PS3 ) 		\
-		|| defined(L2D_TARGET_PS4 ) 		\
-		|| defined(L2D_TARGET_VITA ) 		\
-	)
-		//#define L2D_TARGET_PSP
-		//#define L2D_TARGET_IPHONE
-		//#define L2D_TARGET_IPHONE_ES2
-		//#define L2D_TARGET_MAC_OSX
-		//#define L2D_TARGET_ANDROID
-		//#define L2D_TARGET_ANDROID_ES2
-		//#define L2D_TARGET_QT
-		//#define L2D_TARGET_D3D
-		//#define L2D_TARGET_D3D11
-		//#define L2D_TARGET_WIN_GL
-		//#define L2D_TARGET_3DS
-		//#define L2D_TARGET_PS3
-		//#define L2D_TARGET_PS4
-		//#define L2D_TARGET_VITA
-#endif
-
 #if defined( L2D_TARGET_PSP )
 #define __L2D_PLATFORM_STR__ ("PSP")
 #elif defined( L2D_TARGET_IPHONE )
@@ -57,12 +26,6 @@
 #define __L2D_PLATFORM_STR__ ("Android ES2")
 #elif defined( L2D_TARGET_QT )
 #define __L2D_PLATFORM_STR__ ("Qt")
-#elif defined( L2D_TARGET_D3D )
-#define __L2D_PLATFORM_STR__ ("DirectX9")
-#elif defined( L2D_TARGET_D3D11 )
-#define __L2D_PLATFORM_STR__ ("DirectX11")
-#elif defined( L2D_TARGET_D3D_OPEN )
-#define __L2D_PLATFORM_STR__ ("DirectX_OPEN")
 #elif defined( L2D_TARGET_WIN_GL )
 #define __L2D_PLATFORM_STR__ ("Windows OpenGL")
 #elif defined( L2D_TARGET_3DS )
@@ -120,13 +83,13 @@
 //------------ Texture options ------------
 #if defined( L2D_TARGET_IPHONE ) || defined( L2D_TARGET_ANDROID )
 #  define L2D_INVERT_TEXTURE 0
-#elif defined( L2D_TARGET_IPHONE_ES2 ) || defined( L2D_TARGET_ANDROID_ES2 ) || defined( L2D_TARGET_WIN_GL)
+#elif defined( L2D_TARGET_IPHONE_ES2 ) || defined( L2D_TARGET_ANDROID_ES2 ) || defined( L2D_TARGET_WIN_GL) 
 	#if L2D_BUILD_FOR_UNITY
 		#  define L2D_INVERT_TEXTURE 1
 	#else
 		#  define L2D_INVERT_TEXTURE 0
 	#endif
-#elif defined( L2D_TARGET_VITA ) || defined( L2D_TARGET_D3D11 ) || defined( L2D_TARGET_PS4 )
+#elif defined( L2D_TARGET_VITA ) || defined( L2D_TARGET_PS4 )
 #  define L2D_INVERT_TEXTURE 0
 #else
 #  define L2D_INVERT_TEXTURE 1

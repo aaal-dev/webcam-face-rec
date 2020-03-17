@@ -15,10 +15,6 @@
 
 #include "Live2D.h"
 
-#if  defined(L2D_TARGET_IPHONE_ES2) 	\
-		|| defined(L2D_TARGET_ANDROID_ES2) 	\
-		|| defined(L2D_TARGET_WIN_GL) 	
-
 #include "ALive2DModel.h"
 #include "model/ModelImpl.h"
 
@@ -84,7 +80,5 @@ namespace live2d
 	};
 }
 //--------- LIVE2D NAMESPACE ------------
-
-#endif		//L2D_TARGET_WIN_GL
 
 #endif		// __LIVE2D_L2DMODEL_OPENGL_H__

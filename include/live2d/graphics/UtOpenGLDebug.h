@@ -10,10 +10,6 @@
 
 #ifndef __SKIP_DOC__
 
-#ifdef  L2D_GRAPHICS_OPENGL_ES2
-
-
-
 //------------ LIVE2D NAMESPACE ------------
 namespace live2d
 { 
@@ -29,10 +25,6 @@ namespace live2d
 
 
 } //------------ LIVE2D NAMESPACE ------------
-
-
-#endif
-
 
 #endif // __SKIP_DOC__
 

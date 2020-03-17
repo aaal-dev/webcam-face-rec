@@ -28,18 +28,11 @@ namespace live2d
 		static const int VERTEX_TYPE_OFFSET2_STEP5 = 2 ;		// 
 		static const int VERTEX_TYPE_OFFSET0_STEP5 = 3 ;		// 
 			
-			
-	// コンパイルターゲットごとに描画用配列のオフセットを変える
-
 #if defined( L2D_TARGET_PSP	) // (texture x,y , vertex x,y,z )と並ぶ
 		// 実行環境に依存するため定数
 		static const int VERTEX_OFFSET = 2 ;							// texture x,y の後に並ぶ
 		static const int VERTEX_STEP = 5 ;
 		static const int VERTEX_TYPE = VERTEX_TYPE_OFFSET2_STEP5 ;
-#elif defined( L2D_TARGET_D3D )
-		static const int VERTEX_OFFSET = 0 ;							// texture x,y の後に並ぶ
-		static const int VERTEX_STEP = 5 ;
-		static const int VERTEX_TYPE = VERTEX_TYPE_OFFSET0_STEP5 ;
 #elif defined( L2D_TARGET_VITA )
 		static const int VERTEX_OFFSET = 0 ;							// x,y,z , u,v
 		static const int VERTEX_STEP = 5 ;

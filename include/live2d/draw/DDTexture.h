@@ -15,20 +15,6 @@
 #include "../param/PivotManager.h"
 #include "IDrawContext.h"
 
-#ifdef L2D_TARGET_D3D
-# include <d3dx9.h>
-# include "../graphics/DrawParam_D3D.h"
-#endif
-
-#ifdef L2D_TARGET_D3D11
-#include <d3d11.h>
-# include "../graphics/DrawParam_D3D11.h"
-#endif
-
-#ifdef L2D_TARGET_PS4
-#include <gnmx.h>
-#endif
-
 //------------ LIVE2D NAMESPACE ------------
 namespace live2d
 { 
@@ -83,19 +69,6 @@ namespace live2d
 
 		virtual void draw( DrawParam & dp , ModelContext &mdc , IDrawContext* cdata ) ;
 	
-	#ifdef L2D_TARGET_D3D
-	
-		void setupBufD3D( DrawParam_D3D& dpD3D , ModelContext &mdc , DDTextureContext* cdata ) ;
-	
-		virtual void deviceLost( IDrawContext* drawContext ) ;
-	#endif
-	#ifdef L2D_TARGET_D3D11
-
-		void setupBufD3D(DrawParam_D3D11& dpD3D, ModelContext &mdc, DDTextureContext* cdata);
-
-		virtual void deviceLost(IDrawContext* drawContext);
-	#endif
-
 		//  テクスチャタイプ取得
 		virtual int getType(){ return TYPE_DD_TEXTURE ; }// 
 	
@@ -161,22 +134,6 @@ namespace live2d
 		l2d_pointf * 		drawPoints ;			// 描画用の点列（ダブルバッファ用の場合はスワップして使われる）0.9.00b14
 		
 		unsigned char 		not_updated_count ;		// 更新されなかった回数をカウントする\n１回目と２回目で意味を持つ。\ndouble bufferのとき二回更新されなければそのまま前の値を使える
-		
-	#ifdef L2D_TARGET_D3D
-		LPDIRECT3DVERTEXBUFFER9 		pUvBuf ; // Uv配列
-		LPDIRECT3DINDEXBUFFER9 			pIndexBuf ; // インデックス配列
-	#endif
-
-	#ifdef L2D_TARGET_D3D11
-		ID3D11Buffer* pUvBuf;		// テクスチャuvバッファ
-		ID3D11Buffer* pIndexBuf;	// インデックスバッファ
-	#endif
-
-	#ifdef L2D_TARGET_PS4
-		bool initializedBuffer;
-		float* color;//透明度含めた掛け合わせる色。float[4]。シェーダ用
-		sce::Gnm::Buffer buffers[2];//position , textureUV 
-	#endif
 	} ;
 } 
 //------------ LIVE2D NAMESPACE ------------

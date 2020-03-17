@@ -12,10 +12,7 @@
 #include "memory/LDObject.h"
 #include "type/LDVector.h"
 #include "DEF.h"
-
-#if defined(L2D_TARGET_WIN_GL) || defined(L2D_TARGET_ANDROID_ES2) || defined(L2D_TARGET_IPHONE_ES2)
 #include "graphics/ClippingManagerOpenGL.h"
-#endif
 
 #if L2D_VERBOSE
 #include "util/UtDebug.h"
@@ -276,10 +273,8 @@ namespace live2d
 		MemoryParam*					memoryManagement ;
 		AMemoryHolder*					memoryHolderFixedMain ;
 		AMemoryHolder*					memoryHolderFixedGPU;
-
-#if defined(L2D_TARGET_WIN_GL) || defined(L2D_TARGET_ANDROID_ES2) || defined(L2D_TARGET_IPHONE_ES2)
+		
 		ClippingManagerOpenGL *clipManager;
-#endif
 		
 	};
 }

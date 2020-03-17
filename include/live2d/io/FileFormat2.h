@@ -32,7 +32,7 @@ namespace live2d
 		static const int LIVE2D_FORMAT_VERSION_V2_11_SDK2_1 	= 11;	//SDK2.1
 
 		// ---- 対応可能な最新版のファイル ---- Live2D#BUILD_NO 1000
-#if defined( L2D_TARGET_PS4 ) || defined( L2D_TARGET_D3D ) || defined( L2D_TARGET_D3D11 ) || defined( L2D_TARGET_IPHONE_ES2 ) || defined( L2D_TARGET_ANDROID_ES2 ) || defined( L2D_TARGET_WIN_GL )
+#if defined( L2D_TARGET_PS4 ) || defined( L2D_TARGET_IPHONE_ES2 ) || defined( L2D_TARGET_ANDROID_ES2 )
 		static const int LIVE2D_FORMAT_VERSION_AVAILABLE	 	= LIVE2D_FORMAT_VERSION_V2_11_SDK2_1 ;
 #else
 		static const int LIVE2D_FORMAT_VERSION_AVAILABLE	 	= LIVE2D_FORMAT_VERSION_V2_10_SDK2 ;

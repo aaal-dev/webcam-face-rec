@@ -9,10 +9,6 @@
 
 #ifndef __SKIP_DOC__
 
-
-#if defined(L2D_TARGET_WIN_GL) || defined(L2D_TARGET_ANDROID_ES2) || defined(L2D_TARGET_IPHONE_ES2)
-
-
 #ifdef L2D_TARGET_ANDROID_ES2
 #include <jni.h>
 #include <errno.h>
@@ -23,11 +19,6 @@
 #ifdef L2D_TARGET_IPHONE_ES2
 #include <OpenGLES/ES2/gl.h>
 #include <OpenGLES/ES2/glext.h>
-#endif
-
-#ifdef L2D_TARGET_WIN_GL
-#include <windows.h>
-#include <GL/GL.h>
 #endif
 
 #include "../Live2D.h"
@@ -192,7 +183,5 @@ namespace live2d
 
 
 #endif		// __SKIP_DOC__
-
-#endif		// L2D_TARGET_WIN_GL || L2D_TARGET_ANDROID_ES2 || L2D_TARGET_IPHONE_ES2
 
 #endif		// __LIVE2D_CLIPPINGMANAGEROPENGL_H__
