@@ -25,6 +25,10 @@
 #include <dlib/image_processing/render_face_detections.h>
 #include <dlib/image_processing.h>
 
+// CMUSphinx
+#include <pocketsphinx/pocketsphinx.h>
+
+
 #include "shader.hpp"
 
 namespace app
