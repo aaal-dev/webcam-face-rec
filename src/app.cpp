@@ -5,7 +5,6 @@ namespace app
 
 App* App::instance = nullptr;
 GLFWwindow* App::window = nullptr;
-cv::VideoCapture* App::webcam = nullptr;
 dlib::frontal_face_detector App::faceDetector;
 dlib::shape_predictor App::faceModel;
 GLuint* App::VAO = nullptr;
@@ -20,9 +19,6 @@ bool App::drawCorrectedPoints = false;
 GLuint App::DEFAULT_WIDTH = 800;
 GLuint App::DEFAULT_HEIGHT = 600;
 
-Timer* Timer::instance = nullptr;
-double Timer::startTime;
-double Timer::numberOfTicks;
 
 App::App()
 {
@@ -80,7 +76,7 @@ void App::releaseInstance()
 
 bool App::initialize() 
 {
-	Timer::getInstance()->initialize();
+	Timer::getInstance()->start();
 
 	// Initialize GLFW
 	if(!glfwInit())
@@ -111,14 +107,7 @@ bool App::initialize()
 	// Set the required callback functions
 	glfwSetKeyCallback(window, key_callback);
 	
-	// Initialize OpenCV webcam capture
-	webcam = new cv::VideoCapture(0);
-	if (!webcam->isOpened())
-	{
-		fprintf( stderr, "Unable to connect to camera.\n" );
-		getchar();
-		return 1;
-	}
+	VideoInput::getInstance()->openCamera();
 	
 	faceDetector = dlib::get_frontal_face_detector();
 	dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> faceModel;
@@ -221,7 +210,8 @@ bool App::run()
 			frameCannied, frameBilateraled;
 		
 		// Grab a frame
-		*webcam >> tframe;
+		
+		VideoInput::getInstance()->grabFrame(&tframe);
 		cv::flip(tframe, tframe, 1);
 		
 		cv::cvtColor(tframe, frameRGB, cv::COLOR_BGR2RGB);
@@ -237,7 +227,7 @@ bool App::run()
 		cv::Canny(tframe, frameCannied, 10, 20, 7, true);
 		//cv::erode(frame, tleftEye, kernel);
 		
-		frame = frameCannied;
+		frame = frameGrayEqualized;
 		
 		IplImage imgRGB = cvIplImage(frameRGBBluredResized);
 		IplImage imgGray = cvIplImage(frameGrayBluredResized);
@@ -272,7 +262,7 @@ bool App::run()
 	glDeleteProgram(programID);
 	
 	// Release OpenCV webcam capture
-	webcam->release();
+	VideoInput::getInstance()->releaseCamera();
 	
 	// Terminates GLFW, clearing any resources allocated by GLFW.
 	glfwTerminate();
@@ -452,49 +442,6 @@ void App::dlibDetectAndDraw(cv::Mat frame, T cimg, dlib::frontal_face_detector d
 				}
 			}
 		}
-}
-
-Timer::Timer()
-{
-}
-
-Timer::~Timer()
-{
-}
-
-Timer* Timer::getInstance() 
-{
-	if (instance == nullptr)
-		instance = new Timer();
-	return instance;
-}
-
-void Timer::releaseInstance()
-{
-	if (instance != nullptr)
-		delete instance;
-	instance = nullptr;
-}
-
-void Timer::initialize() 
-{
-	startTime = glfwGetTime();
-	numberOfTicks = 0;
-}
-
-float Timer::getSpeedOnMS()
-{
-	numberOfTicks++;
-	double elastedTime = glfwGetTime() - startTime;
-	float speed = 0;
-	if (elastedTime >= 1.0) 
-	{
-		speed = 1000.0/numberOfTicks;
-		numberOfTicks = 0;
-		startTime += 1.0;
-	}
-	
-	return speed;
 }
 
 }
