@@ -14,7 +14,6 @@
 
 
 // OpenCV
-#include <opencv2/video/tracking.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
@@ -28,7 +27,7 @@
 //#include <pocketsphinx/pocketsphinx.h>
 
 // Inner classes
-#include "kalmanfilter.hpp"
+#include "faceshapes.hpp"
 #include "shader.hpp"
 #include "timer.hpp"
 #include "videoinput.hpp"
@@ -57,7 +56,7 @@ private:
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 	template < typename T >
-	static void dlibDetectAndDraw(cv::Mat frame, T cimg, dlib::frontal_face_detector detector, dlib::shape_predictor pose_model, cv::Scalar color);
+	static void dlibDetectAndDraw(cv::Mat frame, T cimg, cv::Scalar color);
 	
 	// Variables
 	static App* instance;
@@ -72,8 +71,6 @@ private:
 	static GLuint* EBO;
 	static GLuint* webcamTexture;
 	static GLuint* modelTexture;
-	
-	static cv::KalmanFilter* kalmanFilter[68];
 	
 	static GLuint programID;
 	

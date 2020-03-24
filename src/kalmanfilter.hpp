@@ -1,6 +1,9 @@
 #ifndef KALMANFILTER_HPP
 #define KALMANFILTER_HPP
 
+// OpenCV
+#include <opencv2/video/tracking.hpp>
+
 namespace app
 {
 
@@ -12,9 +15,14 @@ public:
 	static void releaseInstance();
 	void start();
 	static void setFilter();
+	static void setPositionOfPoint(cv::Point point);
+	static void getPrediction();
 	static void getCorrection();
-	// Variables
 	
+	// Variables
+	static cv::Point predictedPosition;
+	static cv::Point actualPosition;
+	static cv::Point correctedPosition;
 	
 private:
 	KalmanFilter();
@@ -25,7 +33,10 @@ private:
 	
 	// Variables
 	static KalmanFilter* instance;
-	
+	static cv::KalmanFilter* kalmanFilter;
+	static cv::Mat predictedMat;
+	static cv::Mat actualMat;
+	static cv::Mat correctedMat;
 };
 
 }

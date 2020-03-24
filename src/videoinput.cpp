@@ -6,13 +6,8 @@ namespace app
 VideoInput* VideoInput::instance = nullptr;
 cv::VideoCapture* VideoInput::webcam = nullptr;
 
-VideoInput::VideoInput()
-{
-}
-
-VideoInput::~VideoInput()
-{
-}
+VideoInput::VideoInput(){}
+VideoInput::~VideoInput(){}
 
 VideoInput* VideoInput::getInstance() 
 {

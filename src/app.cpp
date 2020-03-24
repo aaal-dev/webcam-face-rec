@@ -12,21 +12,14 @@ GLuint* App::VBO = nullptr;
 GLuint* App::EBO = nullptr;
 GLuint* App::webcamTexture = nullptr;
 GLuint* App::modelTexture = nullptr;
-cv::KalmanFilter* App::kalmanFilter[68];
 GLuint App::programID;
 bool App::drawActualPoints = false;
 bool App::drawCorrectedPoints = false;
 GLuint App::DEFAULT_WIDTH = 800;
 GLuint App::DEFAULT_HEIGHT = 600;
 
-
-App::App()
-{
-}
-
-App::~App()
-{
-}
+App::App(){}
+App::~App(){}
 
 // Is called whenever a key is pressed/released via GLFW
 void App::key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
@@ -171,27 +164,7 @@ bool App::initialize()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	
 	// Kalman 
-	float fltTransitionMatrixValues[4][4] = { { 1, 0, 1, 0 },
-											  { 0, 1, 0, 1 },
-											  { 0, 0, 1, 0 },
-											  { 0, 0, 0, 1 } };
-											  
-	float fltMeasurementMatrixValues[2][4] = { { 1, 0, 0, 0 },
-											   { 0, 1, 0, 0 } };
-	for (int i=0; i<68; i++)
-	{
-		
-		kalmanFilter[i] = new cv::KalmanFilter(4, 2, 0);
-		kalmanFilter[i]->transitionMatrix = cv::Mat(4, 4, CV_32F, fltTransitionMatrixValues);
-		kalmanFilter[i]->measurementMatrix = cv::Mat(2, 4, CV_32F, fltMeasurementMatrixValues);
-		
-		//cv::setIdentity(kalmanFilter[i]->processNoiseCov, cv::Scalar::all(0.0001));
-		//cv::setIdentity(kalmanFilter[i]->measurementNoiseCov, cv::Scalar::all(10));
-		//cv::setIdentity(kalmanFilter[i]->errorCovPost, cv::Scalar::all(0.1));
-		cv::setIdentity(kalmanFilter[i]->processNoiseCov, cv::Scalar::all(1e-4));
-		cv::setIdentity(kalmanFilter[i]->measurementNoiseCov, cv::Scalar::all(1e-1));
-		cv::setIdentity(kalmanFilter[i]->errorCovPost, cv::Scalar::all(.1));
-	}
+	
 	
 	return true;
 }
@@ -235,9 +208,10 @@ bool App::run()
 		dlib::cv_image<dlib::rgb_pixel> cimgRGB(&imgRGB);
 		dlib::cv_image<unsigned char> cimgGray(&imgGray);
 		
-		dlibDetectAndDraw(frame, cimgRGB, faceDetector, faceModel, cv::Scalar(255,255,0));
-		dlibDetectAndDraw(frame, cimgGray, faceDetector, faceModel, cv::Scalar(127,127,127));
-
+		dlibDetectAndDraw(frame, cimgRGB, cv::Scalar(255,255,0));
+		dlibDetectAndDraw(frame, cimgGray, cv::Scalar(127,127,127));
+		
+		
 		
 		glfwMakeContextCurrent(window);
 		glBindTexture(GL_TEXTURE_2D, *webcamTexture);
@@ -269,179 +243,170 @@ bool App::run()
 	return true;
 }
 
+
+
 template < typename T >
-void App::dlibDetectAndDraw(cv::Mat frame, T cimg, dlib::frontal_face_detector detector, dlib::shape_predictor pose_model, cv::Scalar color)
+void App::dlibDetectAndDraw(cv::Mat frame, T cimg, cv::Scalar color)
 {
 	
 	// Detect faces 
-		std::vector<dlib::rectangle> faces = detector(cimg);
-		
-		// Find the pose of each face.
-		std::vector<dlib::full_object_detection> shapes;
-		for (unsigned long i = 0; i < faces.size(); ++i)
-			shapes.push_back(pose_model(cimg, faces[i]));
-		
-		if (!shapes.empty())
-		{
-			cv::Point actualPosition[68] = {};
-			cv::Point correctedPosition[68] = {};
-			for (int i = 0; i < 68; i++)
-			{
-				cv::Mat predictedPosition = kalmanFilter[i]->predict();
-				cv::Mat position(2, 1, CV_32F, cv::Scalar::all(0));
-				
-				actualPosition[i] = cv::Point(shapes[0].part(i).x()*2, shapes[0].part(i).y()*2);
-				position.at<float>(0, 0) = actualPosition[i].x;
-				position.at<float>(1, 0) = actualPosition[i].y;
-				
-				cv::Mat cPosition = kalmanFilter[i]->correct(position);
-				correctedPosition[i] = cv::Point(cPosition.at<float>(0), cPosition.at<float>(1));
-			}
-			
-			// Simple visualization of face detection
-			//for (int i = 0; i < 68; i++)
-			//{
-			//	cv::circle(frame, cvPoint(shapes[0].part(i).x()*2, shapes[0].part(i).y()*2), 2, cv::Scalar(255, 255, 255), -1);
-			//	cv::circle(frame, correctedPosition[i], 2, cv::Scalar(255, 0, 0), -1);
-			//}
-			
-			// Advanced visualization of face detection
-			// Shape of face (parts 0-16)
-			for (int i = 0; i < 16; i++)
-			{
-				if (drawActualPoints == true)
-					cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
-				if (drawCorrectedPoints == true)
-					cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
-			}
-			
-			// Right eyebrow shape (parts 17-21)
-			for (int i = 17; i < 21; i++)
-			{
-				if (drawActualPoints == true)
-					cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
-				if (drawCorrectedPoints == true)
-					cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
-			}
-			
-			// Left eyebrow shape (parts 22-26)
-			for (int i = 22; i < 26; i++)
-			{
-				if (drawActualPoints == true)
-					cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
-				if (drawCorrectedPoints == true)
-					cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
-			}
-			
-			// Nose shape (parts 27-35)
-			for (int i = 27; i < 35; i++)
-			{
-				if (drawActualPoints == true)
-					cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
-				if (drawCorrectedPoints == true)
-					cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
-			}
-			
-			cv::putText(
-					frame, 
-					std::to_string(shapes[0].part(35).x()*2 - shapes[0].part(31).x()*2), 
-					cvPoint(shapes[0].part(33).x()*2, shapes[0].part(33).y()*2), 
-					cv::FONT_HERSHEY_SIMPLEX, 0.4, color, 1);
-			
-			// Right eye shape (parts 36-41)
-			long int rightEye_x_min = actualPosition[36].x;
-			long int rightEye_x_max = actualPosition[41].x;
-			long int rightEye_y_min = actualPosition[36].y;
-			long int rightEye_y_max = actualPosition[41].y;
-			for (int i = 36; i < 41; i++)
-			{
-				if ( i == 40) 
-				{
-					if (drawActualPoints == true)
-						cv::line(frame, actualPosition[i], actualPosition[36], color, 1);
-					if (drawCorrectedPoints == true)
-						cv::line(frame, correctedPosition[i], correctedPosition[36], color, 1);
-				} else {
-					if (drawActualPoints == true)
-						cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
-					if (drawCorrectedPoints == true)
-						cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
-				}
-				
-				// Found min and max of x and y for locate right eye
-				if (actualPosition[i].x < rightEye_x_min)
-					rightEye_x_min = actualPosition[i].x;
-				if (actualPosition[i].x > rightEye_x_max)
-					rightEye_x_max = actualPosition[i].x;
-				if (actualPosition[i].y < rightEye_y_min)
-					rightEye_y_min = actualPosition[i].y;
-				if (actualPosition[i].y > rightEye_y_max)
-					rightEye_y_max = actualPosition[i].y;
-			}
-			
-			// Left eye shape (parts 42-47)
-			long int leftEye_x_min = actualPosition[42].x; 
-			long int leftEye_x_max = actualPosition[47].x; 
-			long int leftEye_y_min = actualPosition[42].y; 
-			long int leftEye_y_max = actualPosition[47].y;
-			for (int i = 42; i < 47; i++)
-			{
-				if ( i == 46) 
-				{
-					if (drawActualPoints == true)
-						cv::line(frame, actualPosition[i], actualPosition[42], color, 1);
-					if (drawCorrectedPoints == true)
-						cv::line(frame, correctedPosition[i], correctedPosition[42], color, 1);
-				} else {
-					if (drawActualPoints == true)
-						cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
-					if (drawCorrectedPoints == true)
-						cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
-				}
-				if (actualPosition[i].x < leftEye_x_min)
-					leftEye_x_min = actualPosition[i].x;
-				if (actualPosition[i].x > leftEye_x_max)
-					leftEye_x_max = actualPosition[i].x;
-				if (actualPosition[i].y < leftEye_y_min)
-					leftEye_y_min = actualPosition[i].y;
-				if (actualPosition[i].y > leftEye_y_max)
-					leftEye_y_max = actualPosition[i].y;
-			}
-			
-			// Outer mouth shape (parts 48-59)
-			for (int i = 48; i < 59; i++)
-			{
-				if ( i == 58) 
-				{
-					if (drawActualPoints == true)
-						cv::line(frame, actualPosition[i], actualPosition[48], color, 1);
-					if (drawCorrectedPoints == true)
-						cv::line(frame, correctedPosition[i], correctedPosition[48], color, 1);
-				} else {
-					if (drawActualPoints == true)
-						cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
-					if (drawCorrectedPoints == true)
-						cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
-				}
-			}
-			
-			// Inner mouth shape (parts 60-67)
-			for (int i = 60; i < 68; i++)
-			{
-				if (i == 67) 
-				{
-					if (drawActualPoints == true)
-						cv::line(frame, actualPosition[i], actualPosition[60], color, 1);
-					if (drawCorrectedPoints == true)
-						cv::line(frame, correctedPosition[i], correctedPosition[60], color, 1);
-				} else {
-					if (drawActualPoints == true)
-						cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
-					if (drawCorrectedPoints == true)
-						cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
-				}
-			}
-		}
+	std::vector<dlib::rectangle> faces = faceDetector(cimg);
+	
+	// Find the pose of each face.
+	std::vector<dlib::full_object_detection> faceShapes;
+	
+	for (unsigned long i = 0; i < faces.size(); ++i)
+	{
+		dlib::full_object_detection f = faceModel(cimg, faces[i]);
+		faceShapes.push_back(f);
+	}
+	
+//	if (!shapes.empty())
+//	{
+//		// Simple visualization of face detection
+//		//for (int i = 0; i < 68; i++)
+//		//{
+//		//	cv::circle(frame, cvPoint(shapes[0].part(i).x()*2, shapes[0].part(i).y()*2), 2, cv::Scalar(255, 255, 255), -1);
+//		//	cv::circle(frame, correctedPosition[i], 2, cv::Scalar(255, 0, 0), -1);
+//		//}
+//		
+//		// Advanced visualization of face detection
+//		// Cheek to cheek shape (parts 0-16)
+//		for (int i = 0; i < 16; i++)
+//		{
+//			if (drawActualPoints == true)
+//				cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
+//			if (drawCorrectedPoints == true)
+//				cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
+//		}
+//		
+//		// Right eyebrow shape (parts 17-21)
+//		for (int i = 17; i < 21; i++)
+//		{
+//			if (drawActualPoints == true)
+//				cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
+//			if (drawCorrectedPoints == true)
+//				cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
+//		}
+//		
+//		// Left eyebrow shape (parts 22-26)
+//		for (int i = 22; i < 26; i++)
+//		{
+//			if (drawActualPoints == true)
+//				cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
+//			if (drawCorrectedPoints == true)
+//				cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
+//		}
+//		
+//		// Nose shape (parts 27-35)
+//		for (int i = 27; i < 35; i++)
+//		{
+//			if (drawActualPoints == true)
+//				cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
+//			if (drawCorrectedPoints == true)
+//				cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
+//		}
+//		
+//		cv::putText(
+//				frame, 
+//				std::to_string(shapes[0].part(35).x()*2 - shapes[0].part(31).x()*2), 
+//				cvPoint(shapes[0].part(33).x()*2, shapes[0].part(33).y()*2), 
+//				cv::FONT_HERSHEY_SIMPLEX, 0.4, color, 1);
+//		
+//		// Right eye shape (parts 36-41)
+//		long int rightEye_x_min = actualPosition[36].x;
+//		long int rightEye_x_max = actualPosition[41].x;
+//		long int rightEye_y_min = actualPosition[36].y;
+//		long int rightEye_y_max = actualPosition[41].y;
+//		for (int i = 36; i < 41; i++)
+//		{
+//			if ( i == 40) 
+//			{
+//				if (drawActualPoints == true)
+//					cv::line(frame, actualPosition[i], actualPosition[36], color, 1);
+//				if (drawCorrectedPoints == true)
+//					cv::line(frame, correctedPosition[i], correctedPosition[36], color, 1);
+//			} else {
+//				if (drawActualPoints == true)
+//					cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
+//				if (drawCorrectedPoints == true)
+//					cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
+//			}
+//			
+//			// Found min and max of x and y for locate right eye
+//			if (actualPosition[i].x < rightEye_x_min)
+//				rightEye_x_min = actualPosition[i].x;
+//			if (actualPosition[i].x > rightEye_x_max)
+//				rightEye_x_max = actualPosition[i].x;
+//			if (actualPosition[i].y < rightEye_y_min)
+//				rightEye_y_min = actualPosition[i].y;
+//			if (actualPosition[i].y > rightEye_y_max)
+//				rightEye_y_max = actualPosition[i].y;
+//		}
+//		
+//		// Left eye shape (parts 42-47)
+//		long int leftEye_x_min = actualPosition[42].x; 
+//		long int leftEye_x_max = actualPosition[47].x; 
+//		long int leftEye_y_min = actualPosition[42].y; 
+//		long int leftEye_y_max = actualPosition[47].y;
+//		for (int i = 42; i < 47; i++)
+//		{
+//			if ( i == 46) 
+//			{
+//				if (drawActualPoints == true)
+//					cv::line(frame, actualPosition[i], actualPosition[42], color, 1);
+//				if (drawCorrectedPoints == true)
+//					cv::line(frame, correctedPosition[i], correctedPosition[42], color, 1);
+//			} else {
+//				if (drawActualPoints == true)
+//					cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
+//				if (drawCorrectedPoints == true)
+//					cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
+//			}
+//			if (actualPosition[i].x < leftEye_x_min)
+//				leftEye_x_min = actualPosition[i].x;
+//			if (actualPosition[i].x > leftEye_x_max)
+//				leftEye_x_max = actualPosition[i].x;
+//			if (actualPosition[i].y < leftEye_y_min)
+//				leftEye_y_min = actualPosition[i].y;
+//			if (actualPosition[i].y > leftEye_y_max)
+//				leftEye_y_max = actualPosition[i].y;
+//		}
+//		
+//		// Outer mouth shape (parts 48-59)
+//		for (int i = 48; i < 59; i++)
+//		{
+//			if ( i == 58) 
+//			{
+//				if (drawActualPoints == true)
+//					cv::line(frame, actualPosition[i], actualPosition[48], color, 1);
+//				if (drawCorrectedPoints == true)
+//					cv::line(frame, correctedPosition[i], correctedPosition[48], color, 1);
+//			} else {
+//				if (drawActualPoints == true)
+//					cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
+//				if (drawCorrectedPoints == true)
+//					cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
+//			}
+//		}
+//		
+//		// Inner mouth shape (parts 60-67)
+//		for (int i = 60; i < 68; i++)
+//		{
+//			if (i == 67) 
+//			{
+//				if (drawActualPoints == true)
+//					cv::line(frame, actualPosition[i], actualPosition[60], color, 1);
+//				if (drawCorrectedPoints == true)
+//					cv::line(frame, correctedPosition[i], correctedPosition[60], color, 1);
+//			} else {
+//				if (drawActualPoints == true)
+//					cv::line(frame, actualPosition[i], actualPosition[i+1], color, 1);
+//				if (drawCorrectedPoints == true)
+//					cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
+//			}
+//		}
+//	}
 }
 
 }

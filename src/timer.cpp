@@ -8,13 +8,8 @@ double Timer::startTime;
 double Timer::numberOfTicks;
 float Timer::speed;
 
-Timer::Timer()
-{
-}
-
-Timer::~Timer()
-{
-}
+Timer::Timer(){}
+Timer::~Timer(){}
 
 Timer* Timer::getInstance() 
 {

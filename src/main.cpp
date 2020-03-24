@@ -1,8 +1,4 @@
-
 #include "app.hpp"
-
-//#define PI 3.141592654
-
 int main() 
 {
 	if (app::App::getInstance()->initialize() == GL_FALSE)
