@@ -25,24 +25,25 @@ App::~App(){}
 void App::key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
 	std::cout << key << std::endl;
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GL_TRUE);
-	if (key == GLFW_KEY_F1 && action == GLFW_PRESS)
+	if (action == GLFW_PRESS)
 	{
-		if (drawActualPoints == false)
+		switch (key)
 		{
-			drawActualPoints = true;
-		} else {
-			drawActualPoints = false;
-		}
-	}
-	if (key == GLFW_KEY_F2 && action == GLFW_PRESS)
-	{
-		if (drawCorrectedPoints == false)
-		{
-			drawCorrectedPoints = true;
-		} else {
-			drawCorrectedPoints = false;
+			case GLFW_KEY_ESCAPE:
+				glfwSetWindowShouldClose(window, GL_TRUE);
+				break;
+			case GLFW_KEY_F1:
+				if (drawActualPoints == false)
+					drawActualPoints = true;
+				else
+					drawActualPoints = false;
+				break;
+			case GLFW_KEY_F2:
+				if (drawCorrectedPoints == false)
+					drawCorrectedPoints = true;
+				else
+					drawCorrectedPoints = false;
+				break;
 		}
 	}
 }
@@ -163,9 +164,6 @@ bool App::initialize()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	
-	// Kalman 
-	
-	
 	return true;
 }
 
@@ -177,45 +175,106 @@ bool App::run()
 		sprintf( titlestr, "videoInput Demo App (%.1f ms)", Timer::getSpeedOnMS() );
 		glfwSetWindowTitle(window, titlestr);
 		
-		cv::Mat tframe, frame,
-			frameRGB, frameRGBBilateraled, frameRGBResized, frameRGBBluredResized,
-			frameGray, frameGrayBlured, frameGrayResized, frameGrayBluredResized, frameGrayEqualized, 
-			frameCannied, frameBilateraled;
+		cv::Mat frameBGR, frameBGRResized, frameBGRResizedBlured;
+		cv::Mat frameGray, frameGrayBlured, frameGrayResized, frameGrayResizedBlured, frameGrayEqualized;
+		cv::Mat frameRGB; 
+		cv::Mat frameCannied, frameBilateraled;
 		
 		// Grab a frame
+		VideoInput::getInstance()->grabFrame(&frameBGR);
+		cv::flip(frameBGR, frameBGR, 1);
+		cv::cvtColor(frameBGR, frameRGB, cv::COLOR_BGR2RGB);
 		
-		VideoInput::getInstance()->grabFrame(&tframe);
-		cv::flip(tframe, tframe, 1);
+		// Work with original frame
+		cv::resize(frameBGR, frameBGRResized, cv::Size(), 0.5, 0.5);
+		cv::GaussianBlur(frameBGRResized, frameBGRResizedBlured, cv::Size( 5, 5 ), 0, 0 );
 		
-		cv::cvtColor(tframe, frameRGB, cv::COLOR_BGR2RGB);
-		cv::resize(frameRGB, frameRGBResized, cv::Size(), 0.5, 0.5);
-		cv::GaussianBlur(frameRGBResized, frameRGBBluredResized, cv::Size( 5, 5 ), 0, 0 );
+		IplImage imgBGR = cvIplImage(frameBGR);
+		IplImage imgBGRResized = cvIplImage(frameBGRResized);
+		IplImage imgBGRResizedBlured = cvIplImage(frameBGRResizedBlured);
 		
-		cv::cvtColor(tframe, frameGray, cv::COLOR_BGR2GRAY);
+		dlib::cv_image<dlib::bgr_pixel> cimgBGR(&imgBGR);
+		dlib::cv_image<dlib::bgr_pixel> cimgBGRResized(&imgBGRResized);
+		dlib::cv_image<dlib::bgr_pixel> cimgBGRResizedBlured(&imgBGRResizedBlured);
+		
+		std::vector<dlib::rectangle> detectedFacesBGR = faceDetector(cimgBGR);
+		std::vector<dlib::rectangle> detectedFacesBGRResized = faceDetector(cimgBGRResized);
+		std::vector<dlib::rectangle> detectedFacesBGRResizedBlured = faceDetector(cimgBGRResizedBlured);
+		
+		std::vector<dlib::full_object_detection> faceShapesBGR;
+		std::vector<dlib::full_object_detection> faceShapesBGRResized;
+		std::vector<dlib::full_object_detection> faceShapesBGRResizedBlured;
+		
+		for (unsigned long i = 0; i < detectedFacesBGR.size(); ++i)
+			faceShapesBGR.push_back(faceModel(cimgBGR, detectedFacesBGR[i]));
+		for (unsigned long i = 0; i < detectedFacesBGRResized.size(); ++i)
+			faceShapesBGRResized.push_back(faceModel(cimgBGRResized, detectedFacesBGRResized[i]));
+		for (unsigned long i = 0; i < detectedFacesBGRResizedBlured.size(); ++i)
+			faceShapesBGRResizedBlured.push_back(faceModel(cimgBGRResizedBlured, detectedFacesBGRResizedBlured[i]));
+		if (!faceShapesBGR.empty())
+			for (unsigned long i = 0; i < faceShapesBGR.size(); ++i)
+				drawFace(frameRGB, faceShapesBGR[i], cv::Scalar(255,0,0), 1);
+		if (!faceShapesBGRResized.empty())
+			for (unsigned long i = 0; i < faceShapesBGRResized.size(); ++i)
+				drawFace(frameRGB, faceShapesBGRResized[i], cv::Scalar(255,100,100), 2);
+		if (!faceShapesBGRResizedBlured.empty())
+			for (unsigned long i = 0; i < faceShapesBGRResizedBlured.size(); ++i)
+				drawFace(frameRGB, faceShapesBGRResizedBlured[i], cv::Scalar(255,200,200), 2);
+		
+		// Work with grayscaled frame 
+		cv::cvtColor(frameBGR, frameGray, cv::COLOR_BGR2GRAY);
 		cv::resize(frameGray, frameGrayResized, cv::Size(), 0.5, 0.5);
-		cv::GaussianBlur(frameGrayResized, frameGrayBluredResized, cv::Size( 5, 5 ), 0, 0 );
-				
-		//
-		cv::equalizeHist(frameGray, frameGrayEqualized);
-		cv::Canny(tframe, frameCannied, 10, 20, 7, true);
+		cv::GaussianBlur(frameGrayResized, frameGrayResizedBlured, cv::Size( 5, 5 ), 0, 0 );
+		
+		IplImage imgGray = cvIplImage(frameGray);
+		IplImage imgGrayResized = cvIplImage(frameGrayResized);
+		IplImage imgGrayResizedBlured = cvIplImage(frameGrayResizedBlured);
+		
+		dlib::cv_image<unsigned char> cimgGray(&imgGray);
+		dlib::cv_image<unsigned char> cimgGrayResized(&imgGrayResized);
+		dlib::cv_image<unsigned char> cimgGrayResizedBlured(&imgGrayResizedBlured);
+		
+		std::vector<dlib::rectangle> detectedFacesGray = faceDetector(cimgGray);
+		std::vector<dlib::rectangle> detectedFacesGrayResized = faceDetector(cimgGrayResized);
+		std::vector<dlib::rectangle> detectedFacesGrayResizedBlured = faceDetector(cimgGrayResizedBlured);
+		
+		std::vector<dlib::full_object_detection> faceShapesGray;
+		std::vector<dlib::full_object_detection> faceShapesGrayResized;
+		std::vector<dlib::full_object_detection> faceShapesGrayResizedBlured;
+		
+		for (unsigned long i = 0; i < detectedFacesGray.size(); ++i)
+			faceShapesGray.push_back(faceModel(cimgGray, detectedFacesGray[i]));
+		for (unsigned long i = 0; i < detectedFacesGrayResized.size(); ++i)
+			faceShapesGrayResized.push_back(faceModel(cimgGrayResized, detectedFacesGrayResized[i]));
+		for (unsigned long i = 0; i < detectedFacesGrayResizedBlured.size(); ++i)
+			faceShapesGrayResizedBlured.push_back(faceModel(cimgGrayResizedBlured, detectedFacesGrayResizedBlured[i]));
+		
+		if (!faceShapesGray.empty())
+			for (unsigned long i = 0; i < faceShapesGray.size(); ++i)
+				drawFace(frameRGB, faceShapesGray[i], cv::Scalar(0,0,255), 1);
+		if (!faceShapesGrayResized.empty())
+			for (unsigned long i = 0; i < faceShapesGrayResized.size(); ++i)
+				drawFace(frameRGB, faceShapesGrayResized[i], cv::Scalar(100,100,255), 2);
+		if (!faceShapesGrayResizedBlured.empty())
+			for (unsigned long i = 0; i < faceShapesGrayResizedBlured.size(); ++i)
+				drawFace(frameRGB, faceShapesGrayResizedBlured[i], cv::Scalar(200,200,255), 2);
+		
+		//cv::equalizeHist(frameGray, frameGrayEqualized);
+		//cv::Canny(tframe, frameCannied, 10, 20, 7, true);
 		//cv::erode(frame, tleftEye, kernel);
 		
-		frame = frameGrayEqualized;
 		
-		IplImage imgRGB = cvIplImage(frameRGBBluredResized);
-		IplImage imgGray = cvIplImage(frameGrayBluredResized);
 		
-		dlib::cv_image<dlib::rgb_pixel> cimgRGB(&imgRGB);
-		dlib::cv_image<unsigned char> cimgGray(&imgGray);
 		
-		dlibDetectAndDraw(frame, cimgRGB, cv::Scalar(255,255,0));
-		dlibDetectAndDraw(frame, cimgGray, cv::Scalar(127,127,127));
+		
+		
+		
 		
 		
 		
 		glfwMakeContextCurrent(window);
 		glBindTexture(GL_TEXTURE_2D, *webcamTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame.cols, frame.rows, 0, GL_RED, GL_UNSIGNED_BYTE, frame.data);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frameRGB.cols, frameRGB.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, frameRGB.data);
 		glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(programID);
@@ -243,32 +302,14 @@ bool App::run()
 	return true;
 }
 
-
-
-template < typename T >
-void App::dlibDetectAndDraw(cv::Mat frame, T cimg, cv::Scalar color)
+void App::drawFace(cv::Mat frame, dlib::full_object_detection shape, cv::Scalar color, int offset)
 {
-	
-	// Detect faces 
-	std::vector<dlib::rectangle> faces = faceDetector(cimg);
-	
-	// Find the pose of each face.
-	std::vector<dlib::full_object_detection> faceShapes;
-	
-	for (unsigned long i = 0; i < faces.size(); ++i)
-	{
-		dlib::full_object_detection f = faceModel(cimg, faces[i]);
-		faceShapes.push_back(f);
-	}
-	
-//	if (!shapes.empty())
-//	{
-//		// Simple visualization of face detection
-//		//for (int i = 0; i < 68; i++)
-//		//{
-//		//	cv::circle(frame, cvPoint(shapes[0].part(i).x()*2, shapes[0].part(i).y()*2), 2, cv::Scalar(255, 255, 255), -1);
-//		//	cv::circle(frame, correctedPosition[i], 2, cv::Scalar(255, 0, 0), -1);
-//		//}
+		// Simple visualization of face detection
+		for (int i = 0; i < 68; i++)
+		{
+			cv::circle(frame, cvPoint(shape.part(i).x()*offset, shape.part(i).y()*offset), 2, color, -1);
+		//	cv::circle(frame, correctedPosition[i], 2, cv::Scalar(255, 0, 0), -1);
+		}
 //		
 //		// Advanced visualization of face detection
 //		// Cheek to cheek shape (parts 0-16)
@@ -406,7 +447,6 @@ void App::dlibDetectAndDraw(cv::Mat frame, T cimg, cv::Scalar color)
 //					cv::line(frame, correctedPosition[i], correctedPosition[i+1], color, 1);
 //			}
 //		}
-//	}
 }
 
 }

@@ -55,8 +55,7 @@ private:
 	// Functions
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-	template < typename T >
-	static void dlibDetectAndDraw(cv::Mat frame, T cimg, cv::Scalar color);
+	static void drawFace(cv::Mat frame, dlib::full_object_detection shape, cv::Scalar color, int offset);
 	
 	// Variables
 	static App* instance;
