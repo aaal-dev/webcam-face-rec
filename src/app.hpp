@@ -31,6 +31,7 @@
 #include "shader.hpp"
 #include "timer.hpp"
 #include "videoinput.hpp"
+#include "window.hpp"
 
 namespace app
 {
@@ -53,14 +54,10 @@ private:
 	~App();
 	
 	// Functions
-	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
-	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 	static void drawFace(cv::Mat frame, dlib::full_object_detection shape, cv::Scalar color, int offset);
 	
 	// Variables
 	static App* instance;
-	
-	static GLFWwindow* window;
 	
 	static dlib::frontal_face_detector faceDetector;
 	static dlib::shape_predictor faceModel;
@@ -73,8 +70,6 @@ private:
 	
 	static GLuint programID;
 	
-	static bool drawActualPoints;
-	static bool drawCorrectedPoints;
 	static GLuint DEFAULT_WIDTH;
 	static GLuint DEFAULT_HEIGHT;
 	

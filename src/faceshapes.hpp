@@ -25,14 +25,14 @@ public:
 	
 	
 	// Variables
-	shape cheekToCheekShape[];
-	shape rightEyebrowShape[];
-	shape leftEyebrowShape[];
-	shape noseShape[];
-	shape rightEyeShape[];
-	shape leftEyeShape[];
-	shape outerMouthShape[];
-	shape innerMouthShape[];
+	std::vector<shape> cheekToCheekShape;
+	std::vector<shape> rightEyebrowShape;
+	std::vector<shape> leftEyebrowShape;
+	std::vector<shape> noseShape;
+	std::vector<shape> rightEyeShape;
+	std::vector<shape> leftEyeShape;
+	std::vector<shape> outerMouthShape;
+	std::vector<shape> innerMouthShape;
 	
 	
 private:

@@ -4,7 +4,6 @@ namespace app
 {
 
 App* App::instance = nullptr;
-GLFWwindow* App::window = nullptr;
 dlib::frontal_face_detector App::faceDetector;
 dlib::shape_predictor App::faceModel;
 GLuint* App::VAO = nullptr;
@@ -13,46 +12,11 @@ GLuint* App::EBO = nullptr;
 GLuint* App::webcamTexture = nullptr;
 GLuint* App::modelTexture = nullptr;
 GLuint App::programID;
-bool App::drawActualPoints = false;
-bool App::drawCorrectedPoints = false;
 GLuint App::DEFAULT_WIDTH = 800;
 GLuint App::DEFAULT_HEIGHT = 600;
 
 App::App(){}
 App::~App(){}
-
-// Is called whenever a key is pressed/released via GLFW
-void App::key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
-{
-	std::cout << key << std::endl;
-	if (action == GLFW_PRESS)
-	{
-		switch (key)
-		{
-			case GLFW_KEY_ESCAPE:
-				glfwSetWindowShouldClose(window, GL_TRUE);
-				break;
-			case GLFW_KEY_F1:
-				if (drawActualPoints == false)
-					drawActualPoints = true;
-				else
-					drawActualPoints = false;
-				break;
-			case GLFW_KEY_F2:
-				if (drawCorrectedPoints == false)
-					drawCorrectedPoints = true;
-				else
-					drawCorrectedPoints = false;
-				break;
-		}
-	}
-}
-
-void App::framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-	(void)window;
-	glViewport(0, 0, width, height);
-}
 
 App* App::getInstance() 
 {
@@ -71,35 +35,20 @@ void App::releaseInstance()
 bool App::initialize() 
 {
 	Timer::getInstance()->start();
-
-	// Initialize GLFW
-	if(!glfwInit())
+	
+	if (!Window::getInstance()->initialize())
 	{
 		fprintf( stderr, "Failed to initialize GLFW\n" );
 		getchar();
 		return -1;
 	}
 	
-	// Set all the required options for GLFW
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	#ifdef __APPLE__
-		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	#endif 
-	
-	window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "Face", NULL, NULL);
-	if (window == NULL) {
+	if (!Window::getInstance()->createWindow())
+	{
 		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
 		getchar();
-		glfwTerminate();
 		return -1;
 	}
-	glfwMakeContextCurrent(window);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-	// Set the required callback functions
-	glfwSetKeyCallback(window, key_callback);
 	
 	VideoInput::getInstance()->openCamera();
 	
@@ -170,10 +119,10 @@ bool App::initialize()
 bool App::run()
 {
 	char* titlestr = new char[255];
-	while (!glfwWindowShouldClose(window)) 
+	while (!Window::getInstance()->isShouldClose()) 
 	{
 		sprintf( titlestr, "videoInput Demo App (%.1f ms)", Timer::getSpeedOnMS() );
-		glfwSetWindowTitle(window, titlestr);
+		Window::getInstance()->changeTitle(titlestr);
 		
 		cv::Mat frameBGR, frameBGRResized, frameBGRResizedBlured;
 		cv::Mat frameGray, frameGrayBlured, frameGrayResized, frameGrayResizedBlured, frameGrayEqualized;
@@ -263,16 +212,6 @@ bool App::run()
 		//cv::Canny(tframe, frameCannied, 10, 20, 7, true);
 		//cv::erode(frame, tleftEye, kernel);
 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		glfwMakeContextCurrent(window);
 		glBindTexture(GL_TEXTURE_2D, *webcamTexture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frameRGB.cols, frameRGB.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, frameRGB.data);
 		glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
