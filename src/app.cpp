@@ -6,14 +6,8 @@ namespace app
 App* App::instance = nullptr;
 dlib::frontal_face_detector App::faceDetector;
 dlib::shape_predictor App::faceModel;
-GLuint* App::VAO = nullptr;
-GLuint* App::VBO = nullptr;
-GLuint* App::EBO = nullptr;
-GLuint* App::webcamTexture = nullptr;
-GLuint* App::modelTexture = nullptr;
-GLuint App::programID;
-GLuint App::DEFAULT_WIDTH = 800;
-GLuint App::DEFAULT_HEIGHT = 600;
+
+
 
 App::App(){}
 App::~App(){}
@@ -55,63 +49,13 @@ bool App::initialize()
 	faceDetector = dlib::get_frontal_face_detector();
 	dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> faceModel;
 	
-	if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
+	if (!OpenGL::getInstance()->initialize(Window::getInstance()->getProcAddress())) {
 		fprintf( stderr, "Failed to initialize OpenGL context.\n" );
 		getchar();
 		return -1;
 	}
 	
-	glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
-	
-	// Create and compile our GLSL program from the shaders
-	programID = LoadShaders( "vertexshader", "fragmentshader" );
-	
-	static const GLfloat vertices[] = {
-	// |     Position     ||  TexCoord  |
-	   -1.0f,  1.0f,  0.0f,  0.0f,  0.0f, // top left
-		1.0f,  1.0f,  0.0f,  1.0f,  0.0f, // top right
-	   -1.0f, -1.0f,  0.0f,  0.0f,  1.0f, // below left
-		1.0f, -1.0f,  0.0f,  1.0f,  1.0f  // below right 
-	};
-	// Set up index
-	static const GLuint indices[] = {
-		0, 2, 1, 1, 2, 3
-	};
-	
-	VAO = new GLuint();
-	glGenVertexArrays(1, VAO);
-	glBindVertexArray(*VAO);
-	
-	VBO = new GLuint();
-	glGenBuffers(1, VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, *VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
-	
-	EBO = new GLuint();
-	glGenBuffers(1, EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices, GL_STATIC_DRAW);
-	
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	
-	webcamTexture = new GLuint();
-	glGenTextures(1, webcamTexture);
-	glBindTexture(GL_TEXTURE_2D, *webcamTexture);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	
-	modelTexture = new GLuint();
-	glGenTextures(1, modelTexture);
-	glBindTexture(GL_TEXTURE_2D, *modelTexture);
-	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	OpenGL::getInstance()->run();
 	
 	return true;
 }
@@ -212,32 +156,24 @@ bool App::run()
 		//cv::Canny(tframe, frameCannied, 10, 20, 7, true);
 		//cv::erode(frame, tleftEye, kernel);
 		
-		glBindTexture(GL_TEXTURE_2D, *webcamTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frameRGB.cols, frameRGB.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, frameRGB.data);
-		glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glUseProgram(programID);
-		glBindVertexArray(*VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
+		OpenGL::getInstance()->width = frameRGB.cols;
+		OpenGL::getInstance()->height = frameRGB.rows;
+		OpenGL::getInstance()->data = frameRGB.data;
 		
-		glfwSwapBuffers(window);
+		Window::getInstance()->swapBuffers();
 		
-		// Check if any events have been activated (key pressed, mouse moved etc.) and call corresponding response functions
-		glfwPollEvents();
 	}
 	
-	// Cleanup VBO
-	glDeleteBuffers(1, VBO);
-	glDeleteBuffers(1, EBO);
-	glDeleteVertexArrays(1, VAO);
-	glDeleteProgram(programID);
+	OpenGL::getInstance()->cleanup();
 	
 	// Release OpenCV webcam capture
 	VideoInput::getInstance()->releaseCamera();
+	VideoInput::releaseInstance();
 	
 	// Terminates GLFW, clearing any resources allocated by GLFW.
-	glfwTerminate();
+	Window::getInstance()->terminateWindow();
+	Window::releaseInstance();
+	
 	return true;
 }
 

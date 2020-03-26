@@ -1,8 +1,8 @@
 #ifndef WINDOW_HPP
 #define WINDOW_HPP
 
-// GLFW
-#include <GLFW/glfw3.h>
+// Inner classes
+#include "opengl.hpp"
 
 namespace app
 {
@@ -15,9 +15,11 @@ public:
 	static void releaseInstance();
 	bool initialize();
 	bool createWindow();
+	void terminateWindow();
 	bool isShouldClose();
 	static void changeTitle(char* titlestr);
-	
+	static void swapBuffers();
+	GLFWglproc getProcAddress();
 	
 	// Variables
 	

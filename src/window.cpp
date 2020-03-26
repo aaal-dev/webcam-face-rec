@@ -56,6 +56,11 @@ bool Window::createWindow()
 	return true;
 }
 
+void Window::terminateWindow()
+{
+	glfwTerminate();
+}
+
 bool Window::isShouldClose() 
 {
 	return glfwWindowShouldClose(window);
@@ -64,6 +69,19 @@ bool Window::isShouldClose()
 void Window::changeTitle(char* titlestr) 
 {
 	glfwSetWindowTitle(window, titlestr);
+}
+
+void Window::swapBuffers()
+{
+	glfwSwapBuffers(window);
+	
+	// Check if any events have been activated (key pressed, mouse moved etc.) and call corresponding response functions
+	glfwPollEvents();
+}
+
+GLFWglproc Window::getProcAddress()
+{
+	return (GLFWglproc)glfwGetProcAddress;
 }
 
 // Is called whenever a key is pressed/released via GLFW
@@ -95,7 +113,7 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	(void)window;
-	glViewport(0, 0, width, height);
+	OpenGL::getInstance()->changeViewport(0,0, width, height);
 }
 
 }

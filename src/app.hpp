@@ -1,15 +1,6 @@
 #ifndef APP_H
 #define APP_H
 
-// GLAD
-#include "glad/glad.h"
-
-// GLFW
-#include <GLFW/glfw3.h>
-
-// Include GLM
-#include <glm/glm.hpp>
-
 // Live2D
 
 
@@ -28,7 +19,7 @@
 
 // Inner classes
 #include "faceshapes.hpp"
-#include "shader.hpp"
+#include "opengl.hpp"
 #include "timer.hpp"
 #include "videoinput.hpp"
 #include "window.hpp"
@@ -62,16 +53,8 @@ private:
 	static dlib::frontal_face_detector faceDetector;
 	static dlib::shape_predictor faceModel;
 	
-	static GLuint* VAO;
-	static GLuint* VBO;
-	static GLuint* EBO;
-	static GLuint* webcamTexture;
-	static GLuint* modelTexture;
 	
-	static GLuint programID;
 	
-	static GLuint DEFAULT_WIDTH;
-	static GLuint DEFAULT_HEIGHT;
 	
 };
 

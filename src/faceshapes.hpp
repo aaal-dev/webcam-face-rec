@@ -22,7 +22,7 @@ class FaceShapes
 public:
 	// Functions
 	static void drawFaceShape();
-	
+	static void detectFaceShape();
 	
 	// Variables
 	std::vector<shape> cheekToCheekShape;
@@ -44,7 +44,10 @@ private:
 	
 	
 	// Variables
-	
+	cv::Mat frameBGR, frameBGRResized, frameBGRResizedBlured;
+	cv::Mat frameGray, frameGrayBlured, frameGrayResized, frameGrayResizedBlured, frameGrayEqualized;
+	cv::Mat frameRGB; 
+	cv::Mat frameCannied, frameBilateraled;
 	
 	
 };
