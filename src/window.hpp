@@ -1,6 +1,8 @@
 #ifndef WINDOW_HPP
 #define WINDOW_HPP
 
+#include <stdio.h>
+
 // Inner classes
 #include "opengl.hpp"
 

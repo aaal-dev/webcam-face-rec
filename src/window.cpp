@@ -14,7 +14,11 @@ Window::~Window(){}
 Window* Window::getInstance() 
 {
 	if (instance == nullptr)
+	{
 		instance = new Window();
+		instance->initialize();
+	}
+	
 	return instance;
 }
 
@@ -29,7 +33,11 @@ bool Window::initialize()
 {
 	// Initialize GLFW
 	if(!glfwInit())
+	{
+		fprintf( stderr, "Failed to initialize GLFW\n" );
+		getchar();
 		return -1;
+	}
 	
 	// Set all the required options for GLFW
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);

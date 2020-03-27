@@ -36,10 +36,9 @@ bool VideoInput::openCamera()
 	return true;
 }
 
-bool VideoInput::grabFrame(cv::Mat* frame)
+void VideoInput::grabFrame(cv::Mat* frame)
 {
 	*webcam >> *frame;
-	return true;
 }
 
 bool VideoInput::releaseCamera()

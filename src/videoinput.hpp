@@ -14,7 +14,7 @@ public:
 	static VideoInput* getInstance();
 	static void releaseInstance();
 	bool openCamera();
-	bool grabFrame(cv::Mat* frame);
+	void grabFrame(cv::Mat* frame);
 	bool releaseCamera();
 	
 	

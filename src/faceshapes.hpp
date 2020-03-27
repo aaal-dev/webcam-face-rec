@@ -1,6 +1,12 @@
 #ifndef FACESHAPES_HPP
 #define FACESHAPES_HPP
 
+// dlib
+#include <dlib/opencv.h>
+#include <dlib/image_processing/frontal_face_detector.h>
+#include <dlib/image_processing/render_face_detections.h>
+#include <dlib/image_processing.h>
+
 // OpenCV
 #include <opencv2/core/mat.hpp>
 
@@ -21,10 +27,21 @@ class FaceShapes
 {
 public:
 	// Functions
-	static void drawFaceShape();
-	static void detectFaceShape();
+	static FaceShapes* getInstance();
+	static void releaseInstance();
+	static bool initialize();
+	void detectFaceShape();
+	static void drawFaceShape(cv::Mat* frame, dlib::full_object_detection shape, cv::Scalar color, int offset);
+	
 	
 	// Variables
+	cv::Mat frame; 
+	
+	cv::Mat frameBGR, frameBGRResized, frameBGRResizedBlured;
+	cv::Mat frameGray, frameGrayBlured, frameGrayResized, frameGrayResizedBlured, frameGrayEqualized;
+	cv::Mat frameRGB; 
+	cv::Mat frameCannied, frameBilateraled;
+	
 	std::vector<shape> cheekToCheekShape;
 	std::vector<shape> rightEyebrowShape;
 	std::vector<shape> leftEyebrowShape;
@@ -44,10 +61,13 @@ private:
 	
 	
 	// Variables
-	cv::Mat frameBGR, frameBGRResized, frameBGRResizedBlured;
-	cv::Mat frameGray, frameGrayBlured, frameGrayResized, frameGrayResizedBlured, frameGrayEqualized;
-	cv::Mat frameRGB; 
-	cv::Mat frameCannied, frameBilateraled;
+	static FaceShapes* instance;
+	
+	static dlib::frontal_face_detector faceDetector;
+	static dlib::shape_predictor faceModel;
+	
+	
+	
 	
 	
 };
