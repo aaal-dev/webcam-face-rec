@@ -31,7 +31,7 @@ bool VideoInput::openCamera()
 	{
 		fprintf( stderr, "Unable to connect to camera.\n" );
 		getchar();
-		return 1;
+		return false;
 	}
 	return true;
 }

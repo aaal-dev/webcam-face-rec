@@ -4,7 +4,7 @@ namespace app
 {
 
 App* App::instance = nullptr;
-
+bool App::bUseWebcam = false;
 
 
 
@@ -33,15 +33,15 @@ bool App::initialize()
 	{
 		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
 		getchar();
-		return -1;
+		return false;
 	}
 	
-	VideoInput::getInstance()->openCamera();
+	bUseWebcam = VideoInput::getInstance()->openCamera();
 	
 	if (!OpenGL::getInstance()->initialize(Window::getInstance()->getProcAddress())) {
 		fprintf( stderr, "Failed to initialize OpenGL context.\n" );
 		getchar();
-		return -1;
+		return false;
 	}
 	
 	OpenGL::getInstance()->run();

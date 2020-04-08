@@ -1,21 +1,34 @@
-#include <stdio.h>
-#include <string>
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-#include <sstream>
-using namespace std;
-
-#include <stdlib.h>
-#include <string.h>
-
-// GLAD
-#include "glad/glad.h"
-
 #include "shader.hpp"
 
-GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path){
+namespace app
+{
+
+Shader* Shader::instance = nullptr;
+GLuint Shader::ProgramID;
+
+Shader::Shader(){}
+Shader::~Shader(){}
+
+Shader* Shader::getInstance() 
+{
+	if (instance == nullptr)
+		instance = new Shader();
+	return instance;
+}
+
+void Shader::releaseInstance()
+{
+	if (instance != nullptr)
+		delete instance;
+	instance = nullptr;
+}
+
+GLuint Shader::getShaderID()
+{
+	return ProgramID; 
+}
+
+void Shader::loadShaders(const char * vertex_file_path,const char * fragment_file_path){
 
 	// Create the shaders
 	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -32,7 +45,7 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 	}else{
 		printf("Impossible to open %s. Are you in the right directory ? Don't forget to read the FAQ !\n", vertex_file_path);
 		getchar();
-		return 0;
+		return;
 	}
 
 	// Read the Fragment Shader code from the file
@@ -85,7 +98,7 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 
 	// Link the program
 	printf("Linking program\n");
-	GLuint ProgramID = glCreateProgram();
+	ProgramID = glCreateProgram();
 	glAttachShader(ProgramID, VertexShaderID);
 	glAttachShader(ProgramID, FragmentShaderID);
 	glLinkProgram(ProgramID);
@@ -105,8 +118,7 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 	
 	glDeleteShader(VertexShaderID);
 	glDeleteShader(FragmentShaderID);
-
-	return ProgramID;
 }
 
+}
 

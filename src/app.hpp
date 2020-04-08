@@ -43,7 +43,7 @@ private:
 	
 	// Variables
 	static App* instance;
-	
+	static bool bUseWebcam;
 	
 	
 	

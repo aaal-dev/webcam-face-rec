@@ -9,7 +9,6 @@ GLuint* OpenGL::VBO = nullptr;
 GLuint* OpenGL::EBO = nullptr;
 GLuint* OpenGL::webcamTexture = nullptr;
 GLuint* OpenGL::modelTexture = nullptr;
-GLuint OpenGL::programID;
 
 OpenGL::OpenGL(){}
 
@@ -39,7 +38,7 @@ void OpenGL::run()
 	glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
 	
 	// Create and compile our GLSL program from the shaders
-	programID = LoadShaders( "vertexshader", "fragmentshader" );
+	Shader::getInstance()->loadShaders( "vertexshader", "fragmentshader" );
 	
 	static const GLfloat vertices[] = {
 	// |     Position     ||  TexCoord  |
@@ -50,7 +49,7 @@ void OpenGL::run()
 	};
 	// Set up index
 	static const GLuint indices[] = {
-		0, 2, 1, 1, 2, 3
+		0, 1, 2, 2, 3, 0
 	};
 	
 	VAO = new GLuint();
@@ -96,9 +95,9 @@ void OpenGL::draw()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 	glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
-	glUseProgram(programID);
+	glUseProgram(Shader::getInstance()->getShaderID());
 	glBindVertexArray(*VAO);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 	glBindVertexArray(0);
 }
 
@@ -108,7 +107,7 @@ void OpenGL::cleanup()
 	glDeleteBuffers(1, VBO);
 	glDeleteBuffers(1, EBO);
 	glDeleteVertexArrays(1, VAO);
-	glDeleteProgram(programID);
+	glDeleteProgram(Shader::getInstance()->getShaderID());
 }
 
 void OpenGL::changeViewport(int bX, int bY, int eX, int eY)

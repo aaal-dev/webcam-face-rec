@@ -53,7 +53,6 @@ private:
 	static GLuint* webcamTexture;
 	static GLuint* modelTexture;
 	
-	static GLuint programID;
 
 };
 
