@@ -38,8 +38,6 @@ bool App::initialize()
 	
 	VideoInput::getInstance()->openCamera();
 	
-	
-	
 	if (!OpenGL::getInstance()->initialize(Window::getInstance()->getProcAddress())) {
 		fprintf( stderr, "Failed to initialize OpenGL context.\n" );
 		getchar();
