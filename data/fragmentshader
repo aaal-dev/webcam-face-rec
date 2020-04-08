@@ -1,9 +1,0 @@
-#version 330 core
-
-in vec2 texCoord1;
-out vec3 outputColor;
-uniform sampler2D texture0;
-
-void main() {
-    outputColor = vec3(texture(texture0, texCoord1));
-}

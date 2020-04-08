@@ -1,6 +1,9 @@
 #ifndef OPENGL_HPP
 #define OPENGL_HPP
 
+#include <array>
+#include <cstring>
+
 // GLAD
 #include "glad/glad.h"
 
