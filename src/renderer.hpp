@@ -13,42 +13,42 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
+// NanoGUI
+#include <nanogui/nanogui.h>
+
 // Inner classes
-#include "shader.hpp"
+#include "renderer/shader.hpp"
 
 namespace app
 {
 
-
-
-class OpenGL
+class Renderer
 {
 public:
 	
 	// Functions
-	static OpenGL* getInstance();
+	static Renderer* getInstance();
 	static void releaseInstance();
-	static bool initialize(GLFWglproc gladloadproc);
-	void run();
+	static bool initialize(GLADloadproc glfwProcAddress);
 	void draw();
-	void cleanup();
+	static void cleanup();
 	void changeViewport(int bX, int bY, int eX, int eY);
 	
 	// Variables
-	GLsizei width;
-	GLsizei height;
-	unsigned char* data;
+	static GLsizei _width;
+	static GLsizei _height;
+	static GLboolean* _data;
 	
 private:
-	OpenGL();
-	~OpenGL();
+	Renderer();
+	~Renderer();
 	
 	// Functions
 	
 	
 	
 	// Variables
-	static OpenGL* instance;
+	static Renderer* instance;
 	
 	static GLuint* VAO;
 	static GLuint* VBO;

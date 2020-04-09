@@ -15,7 +15,7 @@ public:
 	static void releaseInstance();
 	bool openCamera();
 	void grabFrame(cv::Mat* frame);
-	bool releaseCamera();
+	static void releaseCamera();
 	
 	
 	// Variables

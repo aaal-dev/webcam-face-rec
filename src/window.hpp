@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 // Inner classes
-#include "opengl.hpp"
+#include "renderer.hpp"
 
 namespace app
 {
@@ -16,15 +16,18 @@ public:
 	static Window* getInstance();
 	static void releaseInstance();
 	bool initialize();
+	bool initializeGL();
+	bool initializeGui();
 	bool createWindow();
 	void terminateWindow();
 	bool isShouldClose();
-	static void changeTitle(char* titlestr);
-	static void swapBuffers();
-	GLFWglproc getProcAddress();
+	static void updateSpeedInfo();
+	static void draw();
+	static void cleanup();
 	
 	// Variables
-	
+	static char* title;
+	static Renderer* render;
 	
 private:
 	Window();
@@ -33,12 +36,22 @@ private:
 	// Functions
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+	static void startTimer();
+	static float getSpeedOnMS();
 	
 	// Variables
 	static Window* instance;
 	static GLFWwindow* window;
 	static bool drawActualPoints;
 	static bool drawCorrectedPoints;
+	
+	static double startTime;
+	static double numberOfTicks;
+	static float speed;
+	
+	nanogui::Screen* screen;
+	
+	
 };
 
 }

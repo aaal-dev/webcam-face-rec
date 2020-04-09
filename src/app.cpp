@@ -4,11 +4,19 @@ namespace app
 {
 
 App* App::instance = nullptr;
-bool App::bUseWebcam = false;
+bool App::useWebcam = false;
+Window* App::window = nullptr;
+VideoInput* App::camera = nullptr;
+FaceShapes* App::faceshapes = nullptr;
 
 
+App::App()
+{
+	window = Window::getInstance();
+	camera = VideoInput::getInstance();
+	faceshapes = FaceShapes::getInstance();
+}
 
-App::App(){}
 App::~App(){}
 
 App* App::getInstance() 
@@ -27,58 +35,41 @@ void App::releaseInstance()
 
 bool App::initialize() 
 {
-	Timer::getInstance()->start();
-	
-	if (!Window::getInstance()->createWindow())
-	{
-		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
-		getchar();
-		return false;
-	}
-	
-	bUseWebcam = VideoInput::getInstance()->openCamera();
-	
-	if (!OpenGL::getInstance()->initialize(Window::getInstance()->getProcAddress())) {
-		fprintf( stderr, "Failed to initialize OpenGL context.\n" );
-		getchar();
-		return false;
-	}
-	
-	OpenGL::getInstance()->run();
-	
-	return true;
+	if (window->createWindow())
+		if (window->initializeGL())
+			if (window->initializeGui())
+				return true;
+	return false;
 }
 
 bool App::run()
 {
-	char* titlestr = new char[255];
-	while (!Window::getInstance()->isShouldClose()) 
+	useWebcam = camera->openCamera();
+	while (!window->isShouldClose()) 
 	{
-		sprintf( titlestr, "videoInput Demo App (%.1f ms)", Timer::getSpeedOnMS() );
-		Window::getInstance()->changeTitle(titlestr);
+		window->updateSpeedInfo();
+		if (useWebcam)
+		{
+			// Grab a frame
+			camera->grabFrame(&faceshapes->frame);
+			faceshapes->detectFaceShape();
 		
-		// Grab a frame
-		VideoInput::getInstance()->grabFrame(&FaceShapes::getInstance()->frame);
-		FaceShapes::getInstance()->detectFaceShape();
-		
-		OpenGL::getInstance()->width = FaceShapes::getInstance()->frameRGB.cols;
-		OpenGL::getInstance()->height = FaceShapes::getInstance()->frameRGB.rows;
-		OpenGL::getInstance()->data = FaceShapes::getInstance()->frameRGB.data;
-		
-		OpenGL::getInstance()->draw();
-		Window::getInstance()->swapBuffers();
-		
+			window->render->_width = faceshapes->frameRGB.cols;
+			window->render->_height = faceshapes->frameRGB.rows;
+			window->render->_data = faceshapes->frameRGB.data;
+		}
+		window->draw();
 	}
 	
-	OpenGL::getInstance()->cleanup();
+	window->cleanup();
 	
 	// Release OpenCV webcam capture
-	VideoInput::getInstance()->releaseCamera();
-	VideoInput::releaseInstance();
+	camera->releaseCamera();
+	camera->releaseInstance();
 	
 	// Terminates GLFW, clearing any resources allocated by GLFW.
-	Window::getInstance()->terminateWindow();
-	Window::releaseInstance();
+	window->terminateWindow();
+	window->releaseInstance();
 	
 	return true;
 }

@@ -13,8 +13,6 @@
 
 // Inner classes
 #include "faceshapes.hpp"
-#include "opengl.hpp"
-#include "timer.hpp"
 #include "videoinput.hpp"
 #include "window.hpp"
 
@@ -31,6 +29,7 @@ public:
 	bool initialize();
 	bool run();
 	
+	
 	// Variables
 	
 	
@@ -43,10 +42,10 @@ private:
 	
 	// Variables
 	static App* instance;
-	static bool bUseWebcam;
-	
-	
-	
+	static bool useWebcam;
+	static Window* window;
+	static VideoInput* camera;
+	static FaceShapes* faceshapes;
 	
 	
 };
