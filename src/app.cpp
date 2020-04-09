@@ -37,17 +37,19 @@ bool App::initialize()
 {
 	if (window->createWindow())
 		if (window->initializeGL())
-			if (window->initializeGui())
-				return true;
+			return true;
 	return false;
 }
 
 bool App::run()
 {
+	window->configureWindow();
+	window->initializeGui();
+	window->configureGui();
 	useWebcam = camera->openCamera();
-	while (!window->isShouldClose()) 
+	while (!window->isClosingWindows()) 
 	{
-		window->updateSpeedInfo();
+		window->updateWindow();
 		if (useWebcam)
 		{
 			// Grab a frame

@@ -10,8 +10,11 @@ bool Window::drawCorrectedPoints = false;
 double Window::startTime;
 double Window::numberOfTicks;
 float Window::speed;
+int Window::width;
+int Window::height;
 char* Window::title = (char*)"Demo App";
 nanogui::Screen* screen = nullptr;
+nanogui::FormHelper* gui = nullptr;
 
 Renderer* Window::render = nullptr;
 
@@ -37,6 +40,8 @@ void Window::releaseInstance()
 		delete instance;
 	instance = nullptr;
 }
+
+
 
 bool Window::initialize()
 {
@@ -65,6 +70,18 @@ bool Window::initialize()
 	return false;
 }
 
+bool Window::initializeGL()
+{
+	return render->initialize((GLADloadproc)glfwGetProcAddress);
+}
+
+void Window::initializeGui()
+{
+	screen = new nanogui::Screen();
+	screen->initialize(window, true);
+	gui = new nanogui::FormHelper(screen);
+}
+
 bool Window::createWindow() 
 {
 	window = glfwCreateWindow(800, 600, "Face", nullptr, nullptr);
@@ -81,32 +98,78 @@ bool Window::createWindow()
 	return false;
 }
 
-bool Window::initializeGL()
+void Window::updateWindow() 
 {
-	return render->initialize((GLADloadproc)glfwGetProcAddress);
+	updateTitle();
 }
 
-bool Window::initializeGui()
+void Window::configureWindow()
 {
-	return true;
+	glfwGetFramebufferSize(window, &width, &height);
+	glViewport(0, 0, width, height);
+	glfwSwapInterval(0);
+	glfwSwapBuffers(window);
 }
 
+bool Window::isClosingWindows() 
+{
+	return glfwWindowShouldClose(window);
+}
 
 void Window::terminateWindow()
 {
 	glfwTerminate();
 }
 
-bool Window::isShouldClose() 
-{
-	return glfwWindowShouldClose(window);
-}
 
-void Window::updateSpeedInfo() 
+
+void Window::configureGui()
 {
-	char* titlestr = new char[255];
-	sprintf(titlestr, "%s (%.1f ms)", title, getSpeedOnMS());
-	glfwSetWindowTitle(window, titlestr);
+	enum test_enum 
+	{
+		Item1 = 0,
+		Item2,
+		Item3
+	};
+	
+	bool bvar = true;
+	int ivar = 12345678;
+	double dvar = 3.1415926;
+	float fvar = (float)dvar;
+	std::string strval = "A string";
+	test_enum enumval = Item2;
+	nanogui::Color colval(0.5f, 0.5f, 0.7f, 1.f);
+	bool enabled = true;
+	
+	nanogui::ref<nanogui::Window> nanoguiWindow = gui->addWindow(Eigen::Vector2i(10, 10), "Form helper example");
+	gui->addGroup("Basic types");
+	gui->addVariable("bool", bvar)->setTooltip("Test tooltip.");
+	gui->addVariable("string", strval);
+	
+	gui->addGroup("Validating fields");
+	gui->addVariable("int", ivar)->setSpinnable(true);
+	gui->addVariable("float", fvar)->setTooltip("Test.");
+	gui->addVariable("double", dvar)->setSpinnable(true);
+	
+	gui->addGroup("Complex types");
+	gui->addVariable("Enumeration", enumval, enabled)->setItems({ "Item 1", "Item 2", "Item 3" });
+	gui->addVariable("Color", colval)->setFinalCallback([](const nanogui::Color &c) 
+	{
+		std::cout << "ColorPicker Final Callback: ["
+					<< c.r() << ", "
+					<< c.g() << ", "
+					<< c.b() << ", "
+					<< c.w() << "]" 
+					<< std::endl;
+	});
+	
+	gui->addGroup("Other widgets");
+	gui->addButton("A button", []() { std::cout << "Button pressed." << std::endl; })->setTooltip("Testing a much longer tooltip, that will wrap around to new lines multiple times.");;
+	
+	screen->setVisible(true);
+	screen->performLayout();
+	nanoguiWindow->center();
+
 }
 
 void Window::draw()
@@ -123,6 +186,8 @@ void Window::cleanup()
 {
 	render->cleanup();
 }
+
+
 
 // Is called whenever a key is pressed/released via GLFW
 void Window::key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
@@ -176,7 +241,12 @@ float Window::getSpeedOnMS()
 	return speed;
 }
 
-
+void Window::updateTitle() 
+{
+	char* titlestr = new char[255];
+	sprintf(titlestr, "%s (%.1f ms)", title, getSpeedOnMS());
+	glfwSetWindowTitle(window, titlestr);
+}
 
 }
 

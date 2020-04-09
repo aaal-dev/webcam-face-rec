@@ -17,12 +17,15 @@ public:
 	static void releaseInstance();
 	bool initialize();
 	bool initializeGL();
-	bool initializeGui();
+	void initializeGui();
 	bool createWindow();
-	void terminateWindow();
-	bool isShouldClose();
-	static void updateSpeedInfo();
-	static void draw();
+	static bool isClosingWindows();
+	void configureWindow();
+	static void updateWindow();
+	static void terminateWindow();
+	void configureGui();
+	static void updateTitle();
+	void draw();
 	static void cleanup();
 	
 	// Variables
@@ -45,11 +48,14 @@ private:
 	static bool drawActualPoints;
 	static bool drawCorrectedPoints;
 	
+	static int width;
+	static int height;
 	static double startTime;
 	static double numberOfTicks;
 	static float speed;
 	
 	nanogui::Screen* screen;
+	nanogui::FormHelper* gui;
 	
 	
 };
