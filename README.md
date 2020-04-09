@@ -7,7 +7,8 @@ Now I am read some articles and stuff about eye and pupil recognition, and eye g
 
 #### Using:  
 glad - (OpenGL Loader) - https://github.com/Dav1dde/glad  
-glfw - (OpenGL window and input) - https://github.com/glfw/glfw  
-glm - (OpenGL Mathematics) - https://github.com/g-truc/glm  
-opencv - (Open Source Computer Vision Library) - https://github.com/opencv/opencv  
-dlib - (Machine learning and data analysis) - https://github.com/davisking/dlib
+GLFW - (OpenGL window and input) - https://github.com/glfw/glfw  
+GLM - (OpenGL Mathematics) - https://github.com/g-truc/glm  
+OpenCV - (Open Source Computer Vision Library) - https://github.com/opencv/opencv  
+dlib - (Machine learning and data analysis) - https://github.com/davisking/dlib  
+NanoGUI - (Minimalistic GUI library for OpenGL) - https://github.com/wjakob/nanogui  
