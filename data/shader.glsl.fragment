@@ -1,0 +1,13 @@
+#version 330 core
+
+in vec2 v_texcoord;
+in float v_texID;
+
+uniform sampler2D u_tex[2];
+
+out vec3 outputColor;
+
+void main() {
+	int texindex = int(v_texID);
+	outputColor = vec3(texture(u_tex[texindex], v_texcoord));
+}
