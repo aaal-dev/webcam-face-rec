@@ -20,9 +20,11 @@ Renderer* Window::render = nullptr;
 
 Window::Window()
 {
-	instance->initialize();
-	instance->startTimer();
-	render = Renderer::getInstance();
+	if (instance->initialize())
+	{
+		instance->startTimer();
+		render = Renderer::getInstance();
+	}
 }
 
 Window::~Window(){}
@@ -66,7 +68,7 @@ bool Window::initialize()
 		return true;
 	}
 	fprintf( stderr, "Failed to initialize GLFW\n" );
-	getchar();
+	//getchar();
 	return false;
 }
 
@@ -93,7 +95,7 @@ bool Window::createWindow()
 		return true;
 	}
 	fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n" );
-	getchar();
+	//getchar();
 	glfwTerminate();
 	return false;
 }
@@ -218,7 +220,7 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	(void)window;
-	Renderer::getInstance()->changeViewport(0,0, width, height);
+	render->changeViewport(0,0, width, height);
 }
 
 void Window::startTimer() 

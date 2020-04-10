@@ -30,7 +30,7 @@ bool VideoInput::openCamera()
 	if (webcam->isOpened())
 		return true;
 	fprintf( stderr, "Unable to connect to camera.\n" );
-	getchar();
+	//getchar();
 	return false;
 }
 

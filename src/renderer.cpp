@@ -99,7 +99,7 @@ bool Renderer::initialize(GLADloadproc glfwProcAddress)
 		return true;
 	}
 	fprintf( stderr, "Failed to initialize OpenGL context.\n" );
-	getchar();
+	//getchar();
 	return false;
 }
 
