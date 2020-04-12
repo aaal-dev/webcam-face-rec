@@ -5,9 +5,9 @@ in float v_texID;
 
 uniform sampler2D u_tex[2];
 
-out vec3 outputColor;
+out vec4 outputColor;
 
 void main() {
 	int texindex = int(v_texID);
-	outputColor = vec3(texture(u_tex[texindex], v_texcoord));
+	outputColor = texture(u_tex[texindex], v_texcoord);
 }

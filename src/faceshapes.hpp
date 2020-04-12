@@ -9,6 +9,7 @@
 
 // OpenCV
 #include <opencv2/core/mat.hpp>
+#include <opencv2/viz/types.hpp>
 
 // Inner classes
 #include "kalmanfilter.hpp"
@@ -50,6 +51,19 @@ public:
 	std::vector<shape> leftEyeShape;
 	std::vector<shape> outerMouthShape;
 	std::vector<shape> innerMouthShape;
+	
+	static bool bgrbvar;
+	static bool bgrhbvar;
+	static bool bgrhbbvar;
+	static bool graybvar;
+	static bool grayhbvar;
+	static bool grayhbbvar;
+	static cv::Scalar bgrcolval;
+	static cv::Scalar bgrhcolval;
+	static cv::Scalar bgrhbcolval;
+	static cv::Scalar graycolval;
+	static cv::Scalar grayhcolval;
+	static cv::Scalar grayhbcolval;
 	
 	
 private:

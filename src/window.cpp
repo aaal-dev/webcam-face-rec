@@ -12,9 +12,21 @@ double Window::numberOfTicks;
 float Window::speed;
 int Window::width;
 int Window::height;
-char* Window::title = (char*)"Demo App";
-nanogui::Screen* screen = nullptr;
-nanogui::FormHelper* gui = nullptr;
+char* Window::title = (char* )"Demo App";
+nanogui::Screen* Window::screen = nullptr;
+nanogui::FormHelper* Window::gui = nullptr;
+bool Window::bgrbvar = false;
+bool Window::bgrhbvar = false;
+bool Window::bgrhbbvar = false;
+bool Window::graybvar = false;
+bool Window::grayhbvar = false;
+bool Window::grayhbbvar = false;
+nanogui::Color Window::bgrcolval(1.0f, 0.0f, 0.0f, 1.f);
+nanogui::Color Window::bgrhcolval(0.0f, 0.0f, 1.0f, 1.f);
+nanogui::Color Window::bgrhbcolval(1.0f, 0.0f, 1.0f, 1.f);
+nanogui::Color Window::graycolval(0.0f, 1.0f, 0.0f, 1.f);
+nanogui::Color Window::grayhcolval(1.0f, 1.0f, 0.0f, 1.f);
+nanogui::Color Window::grayhbcolval(0.0f, 1.0f, 1.0f, 1.f);
 
 Renderer* Window::render = nullptr;
 
@@ -77,21 +89,25 @@ bool Window::initializeGL()
 	return render->initialize((GLADloadproc)glfwGetProcAddress);
 }
 
-void Window::initializeGui()
+bool Window::initializeGui()
 {
 	screen = new nanogui::Screen();
-	screen->initialize(window, true);
-	gui = new nanogui::FormHelper(screen);
+	if (screen)
+	{
+		screen->initialize(window, true);
+		return true;
+	}
+	fprintf( stderr, "Failed to initialize screen for nanogui. \n" );
+	//getchar();
+	return false;
 }
 
 bool Window::createWindow() 
 {
 	window = glfwCreateWindow(800, 600, "Face", nullptr, nullptr);
-	if (!window == NULL)
+	if (window)
 	{
 		glfwMakeContextCurrent(window);
-		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-		glfwSetKeyCallback(window, key_callback);
 		return true;
 	}
 	fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n" );
@@ -107,9 +123,17 @@ void Window::updateWindow()
 
 void Window::configureWindow()
 {
+	glfwSetCursorPosCallback(window, cursor_position_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+	glfwSetKeyCallback(window, key_callback);
+    glfwSetCharCallback(window, character_callback);
+    glfwSetDropCallback(window, drop_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
-	glfwSwapInterval(0);
+	glEnable(GL_CULL_FACE);
+	glfwSwapInterval(1);
 	glfwSwapBuffers(window);
 }
 
@@ -127,61 +151,39 @@ void Window::terminateWindow()
 
 void Window::configureGui()
 {
-	enum test_enum 
-	{
-		Item1 = 0,
-		Item2,
-		Item3
-	};
+	gui = new nanogui::FormHelper(screen);
+	nanogui::ref<nanogui::Window> nanoguiWindow = gui->addWindow(Eigen::Vector2i(10, 10), "Settings");
+
+	gui->addVariable("Full-sized BGR", bgrbvar);
+	gui->addVariable("Color", bgrcolval);
 	
-	bool bvar = true;
-	int ivar = 12345678;
-	double dvar = 3.1415926;
-	float fvar = (float)dvar;
-	std::string strval = "A string";
-	test_enum enumval = Item2;
-	nanogui::Color colval(0.5f, 0.5f, 0.7f, 1.f);
-	bool enabled = true;
+	gui->addVariable("Half-sized BGR", bgrhbvar);
+	gui->addVariable("Color", bgrhcolval);
 	
-	nanogui::ref<nanogui::Window> nanoguiWindow = gui->addWindow(Eigen::Vector2i(10, 10), "Form helper example");
-	gui->addGroup("Basic types");
-	gui->addVariable("bool", bvar)->setTooltip("Test tooltip.");
-	gui->addVariable("string", strval);
+	gui->addVariable("Blured half-sized BGR", bgrhbbvar);
+	gui->addVariable("Color", bgrhbcolval);
 	
-	gui->addGroup("Validating fields");
-	gui->addVariable("int", ivar)->setSpinnable(true);
-	gui->addVariable("float", fvar)->setTooltip("Test.");
-	gui->addVariable("double", dvar)->setSpinnable(true);
+	gui->addVariable("Full-sized GRAY", graybvar);
+	gui->addVariable("Color", graycolval);
 	
-	gui->addGroup("Complex types");
-	gui->addVariable("Enumeration", enumval, enabled)->setItems({ "Item 1", "Item 2", "Item 3" });
-	gui->addVariable("Color", colval)->setFinalCallback([](const nanogui::Color &c) 
-	{
-		std::cout << "ColorPicker Final Callback: ["
-					<< c.r() << ", "
-					<< c.g() << ", "
-					<< c.b() << ", "
-					<< c.w() << "]" 
-					<< std::endl;
-	});
+	gui->addVariable("Half-sized GRAY", grayhbvar);
+	gui->addVariable("Color", grayhcolval);
 	
-	gui->addGroup("Other widgets");
-	gui->addButton("A button", []() { std::cout << "Button pressed." << std::endl; })->setTooltip("Testing a much longer tooltip, that will wrap around to new lines multiple times.");;
+	gui->addVariable("Blured half-sized GRAY", grayhbbvar);
+	gui->addVariable("Color", grayhbcolval);
 	
 	screen->setVisible(true);
 	screen->performLayout();
-	nanoguiWindow->center();
-
 }
 
 void Window::draw()
 {
 	// Check if any events have been activated (key pressed, mouse moved etc.) and call corresponding response functions
-	glfwPollEvents();
 	render->draw();
 	screen->drawContents();
 	screen->drawWidgets();
 	glfwSwapBuffers(window);
+	glfwPollEvents();
 }
 
 void Window::cleanup()
@@ -190,38 +192,6 @@ void Window::cleanup()
 }
 
 
-
-// Is called whenever a key is pressed/released via GLFW
-void Window::key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
-{
-	if (action == GLFW_PRESS)
-	{
-		switch (key)
-		{
-			case GLFW_KEY_ESCAPE:
-				glfwSetWindowShouldClose(window, GL_TRUE);
-				break;
-			case GLFW_KEY_F1:
-				if (drawActualPoints == false)
-					drawActualPoints = true;
-				else
-					drawActualPoints = false;
-				break;
-			case GLFW_KEY_F2:
-				if (drawCorrectedPoints == false)
-					drawCorrectedPoints = true;
-				else
-					drawCorrectedPoints = false;
-				break;
-		}
-	}
-}
-
-void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-	(void)window;
-	render->changeViewport(0,0, width, height);
-}
 
 void Window::startTimer() 
 {
@@ -248,6 +218,68 @@ void Window::updateTitle()
 	char* titlestr = new char[255];
 	sprintf(titlestr, "%s (%.1f ms)", title, getSpeedOnMS());
 	glfwSetWindowTitle(window, titlestr);
+}
+
+
+  ////////////////////////
+ // Callback functions //
+////////////////////////
+void Window::key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+{
+	if (action == GLFW_PRESS)
+	{
+		switch (key)
+		{
+			case GLFW_KEY_ESCAPE:
+				glfwSetWindowShouldClose(window, GL_TRUE);
+				break;
+			case GLFW_KEY_F1:
+				if (drawActualPoints == false)
+					drawActualPoints = true;
+				else
+					drawActualPoints = false;
+				break;
+			case GLFW_KEY_F2:
+				if (drawCorrectedPoints == false)
+					drawCorrectedPoints = true;
+				else
+					drawCorrectedPoints = false;
+				break;
+		}
+	}
+	screen->keyCallbackEvent(key, scancode, action, mode);
+}
+
+void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	(void)window;
+	screen->resizeCallbackEvent(width, height);
+	render->changeViewport(0,0, width, height);
+}
+
+void Window::cursor_position_callback(GLFWwindow* window, double x, double y)
+{
+	screen->cursorPosCallbackEvent(x, y);
+}
+
+void Window::mouse_button_callback(GLFWwindow* window, int button, int action, int modifiers)
+{
+	screen->mouseButtonCallbackEvent(button, action, modifiers);
+}
+
+void Window::character_callback(GLFWwindow* window, unsigned int codepoint)
+{
+	screen->charCallbackEvent(codepoint);
+}
+
+void Window::drop_callback(GLFWwindow* window, int count, const char **filenames)
+{
+	screen->dropCallbackEvent(count, filenames);
+}
+
+void Window::scroll_callback(GLFWwindow* window, double x, double y)
+{
+	screen->scrollCallbackEvent(x, y);
 }
 
 }

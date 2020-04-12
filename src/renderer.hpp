@@ -7,9 +7,6 @@
 // GLAD
 #include "glad/glad.h"
 
-// Include GLM
-#include <glm/glm.hpp>
-
 // GLFW
 #include <GLFW/glfw3.h>
 
@@ -39,6 +36,8 @@ public:
 	static GLsizei _height;
 	static GLboolean* _data;
 	
+	
+	
 private:
 	Renderer();
 	~Renderer();
@@ -49,6 +48,7 @@ private:
 	
 	// Variables
 	static Renderer* instance;
+	static Shader* shader;
 	
 	static GLuint* VAO;
 	static GLuint* VBO;

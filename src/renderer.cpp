@@ -4,6 +4,7 @@ namespace app
 {
 
 Renderer* Renderer::instance = nullptr;
+Shader* Renderer::shader = nullptr;
 GLuint* Renderer::VAO = nullptr;
 GLuint* Renderer::VBO = nullptr;
 GLuint* Renderer::EBO = nullptr;
@@ -30,7 +31,10 @@ struct Vertex
 	float TexId;
 };
 
-Renderer::Renderer(){}
+Renderer::Renderer()
+{
+	shader = Shader::getInstance();
+}
 
 Renderer::~Renderer(){}
 
@@ -52,22 +56,20 @@ bool Renderer::initialize(GLADloadproc glfwProcAddress)
 {
 	if (gladLoadGLLoader(glfwProcAddress))
 	{
-		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
-		
 		// Create and compile our GLSL program from the shaders
-		Shader::getInstance()->loadShaders( "shader.glsl.vertex", "shader.glsl.fragment" );
-		auto loc = glGetUniformLocation(Shader::getInstance()->getShaderID(), "u_tex");
+		shader->loadShaders( "shader.glsl.vertex", "shader.glsl.fragment" );
+		auto loc = glGetUniformLocation(shader->getShaderID(), "u_tex");
 		int samplers[2] = { 0, 1 };
 		glUniform1iv(loc, 2, samplers);
-		
-		VAO = new GLuint();
-		glGenVertexArrays(1, VAO);
-		glBindVertexArray(*VAO);
 		
 		VBO = new GLuint();
 		glGenBuffers(1, VBO);
 		glBindBuffer(GL_ARRAY_BUFFER, *VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 3, nullptr, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, 4* sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
+		
+		VAO = new GLuint();
+		glGenVertexArrays(1, VAO);
+		glBindVertexArray(*VAO);
 		
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
@@ -96,6 +98,8 @@ bool Renderer::initialize(GLADloadproc glfwProcAddress)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		//glEnable(GL_BLEND);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		return true;
 	}
 	fprintf( stderr, "Failed to initialize OpenGL context.\n" );
@@ -116,12 +120,12 @@ std::array<Vertex, 4> CreateQuad(float x, float y, float z, float size, float te
 	v1.TexId = textureID;
 	
 	Vertex v2;
-	v2.Position = { x + size, y + size, z };
+	v2.Position = { x + size, y - size, z };
 	v2.TexCoords = { 1.0f, 1.0f };
 	v2.TexId = textureID;
 	
 	Vertex v3;
-	v3.Position = { x, y + size, z };
+	v3.Position = { x, y - size, z };
 	v3.TexCoords = { 0.0f, 1.0f };
 	v3.TexId = textureID;
 	
@@ -130,22 +134,21 @@ std::array<Vertex, 4> CreateQuad(float x, float y, float z, float size, float te
 
 void Renderer::draw()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+	glUseProgram(shader->getShaderID());
 	glBindTexture(GL_TEXTURE_2D, *webcamTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, _data);
 	
-	glUseProgram(Shader::getInstance()->getShaderID());
-	glActiveTexture(GL_TEXTURE0);
-	
-	auto q0 = CreateQuad(-0.5f, -0.5f, 0.0f, 1.0f, 0.0f);
-	Vertex vertices[3];
+	auto q0 = CreateQuad(-1.0f, 1.0f, 0.0f, 2.0f, 0.0f);
+	Vertex vertices[4];
 	memcpy(vertices, q0.data(), q0.size() * sizeof(Vertex));
 	
 	glBindBuffer(GL_ARRAY_BUFFER, *VBO);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 	
 	glBindVertexArray(*VAO);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+	glDrawElements(GL_TRIANGLES, sizeof(vertices), GL_UNSIGNED_INT, 0);
 }
 
 void Renderer::cleanup()
@@ -154,7 +157,7 @@ void Renderer::cleanup()
 	glDeleteBuffers(1, VBO);
 	glDeleteBuffers(1, EBO);
 	glDeleteVertexArrays(1, VAO);
-	glDeleteProgram(Shader::getInstance()->getShaderID());
+	glDeleteProgram(shader->getShaderID());
 }
 
 void Renderer::changeViewport(int bX, int bY, int eX, int eY)
