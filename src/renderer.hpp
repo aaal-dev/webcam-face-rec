@@ -1,7 +1,7 @@
 #ifndef OPENGL_HPP
 #define OPENGL_HPP
 
-#include <array>
+#include <vector>
 #include <cstring>
 
 // GLAD
@@ -14,6 +14,7 @@
 #include <nanogui/nanogui.h>
 
 // Inner classes
+#include "renderer/mesh.hpp"
 #include "renderer/shader.hpp"
 
 namespace app
@@ -26,9 +27,9 @@ public:
 	// Functions
 	static Renderer* getInstance();
 	static void releaseInstance();
-	static bool initialize(GLADloadproc glfwProcAddress);
+	bool initialize(GLADloadproc glfwProcAddress);
 	void draw();
-	static void cleanup();
+	void cleanup();
 	void changeViewport(int bX, int bY, int eX, int eY);
 	
 	// Variables
@@ -49,6 +50,8 @@ private:
 	// Variables
 	static Renderer* instance;
 	static Shader* shader;
+	
+	std::vector<Mesh> meshes;
 	
 	static GLuint* VAO;
 	static GLuint* VBO;

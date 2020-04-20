@@ -49,7 +49,7 @@ void FaceShapes::releaseInstance()
 bool FaceShapes::initialize()
 {
 	faceDetector = dlib::get_frontal_face_detector();
-	dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> faceModel;
+	dlib::deserialize("../../../data/shape_predictor_68_face_landmarks.dat") >> faceModel;
 	return true;
 }
 

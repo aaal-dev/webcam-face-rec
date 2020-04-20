@@ -1,12 +1,14 @@
 #include "shader.hpp"
 
-namespace app
-{
-
 Shader* Shader::instance = nullptr;
 GLuint Shader::ProgramID;
 
 Shader::Shader(){}
+Shader::Shader(const char * vertex_file_path,const char * fragment_file_path)
+{
+	loadShaders(vertex_file_path, fragment_file_path);
+}
+
 Shader::~Shader(){}
 
 Shader* Shader::getInstance() 
@@ -112,7 +114,5 @@ void Shader::loadShaders(const char * vertex_file_path,const char * fragment_fil
 	
 	glDeleteShader(VertexShaderID);
 	glDeleteShader(FragmentShaderID);
-}
-
 }
 

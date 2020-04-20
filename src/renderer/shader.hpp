@@ -16,12 +16,14 @@
 #include "glad/glad.h"
 
 
-namespace app
-{
-
 class Shader
 {
 public:
+	Shader();
+	Shader(const char * vertex_file_path,const char * fragment_file_path);
+	~Shader();
+	
+	
 	// Functions
 	static Shader* getInstance();
 	static void releaseInstance();
@@ -29,12 +31,11 @@ public:
 	static GLuint getShaderID();
 	static void loadShaders(const char * vertex_file_path,const char * fragment_file_path);
 	
+	
 	// Variables
 	
 	
 private:
-	Shader();
-	~Shader();
 	
 	// Functions
 	
@@ -44,9 +45,5 @@ private:
 	static GLuint ProgramID;
 	
 };
-
-}
-
-
 
 #endif
