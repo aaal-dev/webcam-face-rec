@@ -39,6 +39,10 @@ bool Renderer::initialize(GLADloadproc glfwProcAddress)
 {
 	if (gladLoadGLLoader(glfwProcAddress))
 	{
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+		glEnable(GL_CULL_FACE);
+		
 		// Create and compile our GLSL program from the shaders
 		Mesh webcam;
 		webcam.shader = Shader( "../../../data/shader.glsl.vertex", "../../../data/shader.glsl.fragment" );

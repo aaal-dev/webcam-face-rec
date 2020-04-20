@@ -55,9 +55,9 @@ void Mesh::load_vertices(const aiMesh *mesh)
 	{
 		Vertex vertex;
 		Vec3 vector;
-		vector.x = mesh->mVertices[i].x*0.1+0.5;
-		vector.y = mesh->mVertices[i].y*0.1+0.5;
-		vector.z = mesh->mVertices[i].z*0.1;
+		vector.x = mesh->mVertices[i].x*;
+		vector.y = mesh->mVertices[i].y*;
+		vector.z = mesh->mVertices[i].z*;
 		vertex.Position = vector;
 		
 		//vector.x = mesh->mNormals[i].x;
