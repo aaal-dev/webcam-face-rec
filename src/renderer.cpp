@@ -42,7 +42,7 @@ bool Renderer::initialize(GLADloadproc glfwProcAddress)
 		// Create and compile our GLSL program from the shaders
 		Mesh webcam;
 		webcam.shader = Shader( "../../../data/shader.glsl.vertex", "../../../data/shader.glsl.fragment" );
-		auto loc = glGetUniformLocation(webcam.shader.getShaderID(), "u_tex");
+		int loc = glGetUniformLocation(webcam.shader.getShaderID(), "u_tex");
 		int samplers[2] = { 0, 1 };
 		glUniform1iv(loc, 2, samplers);
 		
@@ -82,16 +82,13 @@ bool Renderer::initialize(GLADloadproc glfwProcAddress)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		//glEnable(GL_BLEND);
 		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		meshes.push_back(webcam);
+		//meshes.push_back(webcam);
 		
 		Mesh headModel;
-		headModel.load_model("../../../data/model/female/female.obj")
-		headModel.shader = Shader( "../../../data/shader.glsl.vertex", "../../../data/shader.glsl.fragment" );
-		auto loc = glGetUniformLocation(webcam.shader.getShaderID(), "u_tex");
-		int samplers[2] = { 0, 1 };
+		headModel.load_model("../../../data/model/female/female.obj");
+		headModel.shader = Shader( "../../../data/shader2.glsl.vertex", "../../../data/shader2.glsl.fragment" );
+		loc = glGetUniformLocation(headModel.shader.getShaderID(), "u_tex");
 		glUniform1iv(loc, 2, samplers);
-		
-		headModel.vertices = headModel.CreateQuad(-1.0f, 1.0f, 0.0f, 2.0f, 0.0f);
 		
 		glGenBuffers(1, &headModel.VBO);
 		glBindBuffer(GL_ARRAY_BUFFER, headModel.VBO);
@@ -110,36 +107,13 @@ bool Renderer::initialize(GLADloadproc glfwProcAddress)
 		glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexId)));
 		
 		// Set up index
-		
-		headModel.indices = { 0, 1, 2, 2, 3, 0 };
-		
 		glGenBuffers(1, &headModel.EBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, headModel.EBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(headModel.indices), &headModel.indices.front(), GL_STATIC_DRAW);
 		
-		webcamTexture = new GLuint();
-		glGenTextures(1, webcamTexture);
-		glBindTexture(GL_TEXTURE_2D, *webcamTexture);
-		
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		//glEnable(GL_BLEND);
 		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		meshes.push_back(headModel);
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		
 		return true;
 	}
@@ -151,7 +125,7 @@ bool Renderer::initialize(GLADloadproc glfwProcAddress)
 void Renderer::draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+	glClearColor(0.0f, 0.2f, 0.0f, 0.0f);
 	for (const auto &mesh : meshes)
 	{
 		glUseProgram(mesh.shader.getShaderID());

@@ -42,9 +42,9 @@ public:
 	
 	std::vector<Vertex> CreateQuad(float x, float y, float z, float size, float textureID);
 	void load_model(const char* path);
-	void process_mesh(aiMesh *mesh, const aiScene *scene);
-	std::vector<Vertex> load_vertices(const aiMesh *mesh);
-	std::vector<unsigned int> load_indices(const aiMesh *mesh);
+	void process_mesh(aiMesh *mesh);
+	void load_vertices(const aiMesh *mesh);
+	void load_indices(const aiMesh *mesh);
 };
 
 #endif // MESH_HPP

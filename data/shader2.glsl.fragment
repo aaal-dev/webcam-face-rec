@@ -1,0 +1,9 @@
+#version 330 core
+
+in vec2 v_texcoord;
+
+out vec4 outputColor;
+
+void main() {
+	outputColor = vec4(1.0f, 0.0f, 0.0f, v_texcoord);
+}

@@ -28,8 +28,8 @@ public:
 	static Shader* getInstance();
 	static void releaseInstance();
 	static void initialize();
-	static GLuint getShaderID();
-	static void loadShaders(const char * vertex_file_path,const char * fragment_file_path);
+	GLuint getShaderID() const;
+	void loadShaders(const char * vertex_file_path,const char * fragment_file_path);
 	
 	
 	// Variables
@@ -42,7 +42,7 @@ private:
 	
 	// Variables
 	static Shader* instance;
-	static GLuint ProgramID;
+	GLuint ProgramID;
 	
 };
 

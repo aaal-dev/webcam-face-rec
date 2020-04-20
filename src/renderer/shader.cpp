@@ -1,7 +1,6 @@
 #include "shader.hpp"
 
 Shader* Shader::instance = nullptr;
-GLuint Shader::ProgramID;
 
 Shader::Shader(){}
 Shader::Shader(const char * vertex_file_path,const char * fragment_file_path)
@@ -25,7 +24,7 @@ void Shader::releaseInstance()
 	instance = nullptr;
 }
 
-GLuint Shader::getShaderID()
+GLuint Shader::getShaderID() const
 {
 	return ProgramID; 
 }
