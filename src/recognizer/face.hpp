@@ -6,6 +6,9 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
+// Inner classes
+#include "kalmanfilter.hpp"
+
 class Face
 {
 public:
@@ -17,6 +20,7 @@ public:
 	cv::Rect face_rect;
 	std::vector<cv::Point> landmarks;
 	cv::Point nose_base;
+	cv::Point nose_tip;
 	cv::Point mouth_base;
 	double theta;
 	double tau;

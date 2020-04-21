@@ -1,8 +1,8 @@
 #version 330 core
 
 layout (location = 0) in vec3 a_position;
-layout (location = 1) in vec2 a_texcoord;
-layout (location = 2) in float a_texID;
+layout (location = 2) in vec2 a_texcoord;
+layout (location = 3) in float a_texID;
 
 out vec2 v_texcoord;
 out float v_texID;

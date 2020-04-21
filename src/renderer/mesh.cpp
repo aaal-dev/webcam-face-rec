@@ -13,8 +13,8 @@ std::vector<Vertex> Mesh::CreateQuad(float x, float y, float z, float size, floa
 	v0.TexId = textureID;
 	
 	Vertex v1;
-	v1.Position = { x + size, y, z };
-	v1.TexCoords = { 1.0f, 0.0f };
+	v1.Position = { x, y - size, z };
+	v1.TexCoords = { 0.0f, 1.0f };
 	v1.TexId = textureID;
 	
 	Vertex v2;
@@ -23,8 +23,8 @@ std::vector<Vertex> Mesh::CreateQuad(float x, float y, float z, float size, floa
 	v2.TexId = textureID;
 	
 	Vertex v3;
-	v3.Position = { x, y - size, z };
-	v3.TexCoords = { 0.0f, 1.0f };
+	v3.Position = { x + size, y, z };
+	v3.TexCoords = { 1.0f, 0.0f };
 	v3.TexId = textureID;
 	
 	return { v0, v1, v2, v3 };
@@ -40,13 +40,22 @@ void Mesh::load_model(const char* path)
 		throw;
 	}
     for(unsigned int i = 0; i < scene->mNumMeshes; i++)
+	{
 		process_mesh(scene->mMeshes[i]);
+		
+		aiMaterial *material = scene->mMaterials[scene->mMeshes[i]->mMaterialIndex];
+		aiColor3D color(0.f, 0.f, 0.f);
+		material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+		this->base_color = glm::vec3(color[0], color[1], color[2]);
+	}
 }
 
 void Mesh::process_mesh(aiMesh *mesh)
 {
 	load_vertices(mesh);
 	load_indices(mesh);
+	
+	
 }
 
 void Mesh::load_vertices(const aiMesh *mesh)
@@ -60,10 +69,10 @@ void Mesh::load_vertices(const aiMesh *mesh)
 		vector.z = mesh->mVertices[i].z;
 		vertex.Position = vector;
 		
-		//vector.x = mesh->mNormals[i].x;
-		//vector.y = mesh->mNormals[i].y;
-		//vector.z = mesh->mNormals[i].z;
-		//vertex.Normal = vector;
+		vector.x = mesh->mNormals[i].x;
+		vector.y = mesh->mNormals[i].y;
+		vector.z = mesh->mNormals[i].z;
+		vertex.Normal = vector;
 		
 		if(mesh->mTextureCoords[0]) 
 		{

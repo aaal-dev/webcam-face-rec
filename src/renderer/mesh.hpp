@@ -16,6 +16,7 @@
 struct Vertex
 {
 	glm::vec3 Position;
+	glm::vec3 Normal;
 	glm::vec2 TexCoords;
 	float TexId;
 };
@@ -29,6 +30,7 @@ public:
 	// Variables
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
+	glm::vec3 base_color;
 	Shader shader;
 	GLuint VAO;
 	GLuint VBO;

@@ -85,10 +85,10 @@ Mesh Renderer::setWebcamMesh()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
 	
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexCoords)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexCoords)));
 	
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexId)));
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexId)));
 	
 	// Set up index
 	webcam.indices = { 0, 1, 2, 2, 3, 0 };
@@ -113,8 +113,23 @@ Mesh Renderer::setWebcamMesh()
 Mesh Renderer::setHeadModelMesh()
 {
 	Mesh headModel;
-	headModel.load_model("../../../data/model/female/female.obj");
+	//headModel.load_model("../../../data/model/cartoon/head.obj");
+	headModel.load_model("../../../data/model/female/female2.obj");
 	headModel.shader = Shader( "../../../data/shader2.glsl.vertex", "../../../data/shader2.glsl.fragment" );
+	
+	glUseProgram(headModel.shader.getShaderID());
+	
+	GLuint l_positionMatrixID = glGetUniformLocation(headModel.shader.getShaderID(), "l_position");
+	glm::vec3 l_position = glm::vec3(10.0f, 15.0f, 10.0f);
+	glUniform3fv(l_positionMatrixID, 1, &l_position[0]);
+	
+	GLuint l_colorMatrixID = glGetUniformLocation(headModel.shader.getShaderID(), "l_color");
+	glm::vec3 l_color = glm::vec3(1.0f, 1.0f, 1.0f);
+	glUniform3fv(l_colorMatrixID, 1, &l_color[0]);
+	
+	GLuint colorMatrixID = glGetUniformLocation(headModel.shader.getShaderID(), "color");
+	glm::vec3 m_color = headModel.base_color;
+	glUniform3fv(colorMatrixID, 1, &m_color[0]);
 	
 	glGenBuffers(1, &headModel.VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, headModel.VBO);
@@ -127,18 +142,16 @@ Mesh Renderer::setHeadModelMesh()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
 	
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexCoords)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, Normal)));
 	
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexId)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexCoords)));
 	
 	// Set up index
 	glGenBuffers(1, &headModel.EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, headModel.EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(headModel.indices), &headModel.indices.front(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, headModel.indices.size() * sizeof(unsigned int), &headModel.indices.front(), GL_STATIC_DRAW);
 	
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	return headModel;
 }
 
@@ -151,17 +164,27 @@ void Renderer::draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0f, 0.2f, 0.0f, 0.0f);
+	//glEnable(GL_DEPTH_TEST);
+	//glDepthFunc(GL_LESS);
+	//glEnable(GL_CULL_FACE);
+	
 	for (const auto &mesh : meshes)
 	{
 		glUseProgram(mesh.shader.getShaderID());
 		
-//		GLuint MatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "MVP");
-//		glm::mat4 ModelMatrix = glm::mat4(1.0);
-//		glm::mat4 MVP = mesh.projectionMatrix * mesh.viewMatrix * ModelMatrix;
-//		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-		GLuint transformationMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "transformation");
+		float aspect_ratio = (float)_width / (float)_height;
+		
+		GLuint modelMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "model");
 		glm::mat4 mesh_transform = mesh.normalization * mesh.transformation;
-		glUniformMatrix4fv(transformationMatrixID, 1, GL_FALSE, &mesh_transform[0][0]);
+		glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, &mesh_transform[0][0]);
+		
+		GLuint viewMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "view");
+		glm::mat4 view = glm::lookAt(glm::vec3(15.0, 5.0, 0.0), glm::vec3(0.0, 5.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+		glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, &view[0][0]);
+		
+		GLuint projectionMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "projection");
+		glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect_ratio, 0.5f, 100.0f);
+		glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projection[0][0]);
 		
 		glBindTexture(GL_TEXTURE_2D, *webcamTexture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, _data);

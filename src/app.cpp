@@ -56,6 +56,9 @@ bool App::run()
 			recognizer->frame = camera->grabFrame();
 			recognizer->detectFaces();
 			
+			//glm::mat4 transformation = recognizer->
+			//window->render->setHeadModelTransformation(transformation);
+			
 			window->render->_width   = recognizer->frameRGB.cols;
 			window->render->_height  = recognizer->frameRGB.rows;
 			window->render->_data    = recognizer->frameRGB.data;

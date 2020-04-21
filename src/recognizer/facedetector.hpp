@@ -19,7 +19,6 @@ public:
 	template <typename T>
 	std::vector<Face> detect_faces(const cv::Mat &frame);
 	
-	
 private:
 	// Variables
 	cv::CascadeClassifier face_classifier;
@@ -28,6 +27,7 @@ private:
 	
 	// Functions
 	cv::Point get_nose_base(const Face &face);
+	cv::Point get_nose_tip(const Face &face);
 	cv::Point get_mouth_base(const Face &face);
 	double get_theta(const Face &face);
 	double get_tau(const Face &face);
