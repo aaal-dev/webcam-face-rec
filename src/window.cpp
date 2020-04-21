@@ -179,6 +179,11 @@ void Window::configureGui()
 void Window::draw()
 {
 	// Check if any events have been activated (key pressed, mouse moved etc.) and call corresponding response functions
+//	glm::mat4 rotation_matrix(1.0);
+//	rotation_matrix = glm::rotate(rotation_matrix,  face_rotation[0], glm::vec3(1.0f, 0.0f, 0.0f));  // forward-back
+//	rotation_matrix = glm::rotate(rotation_matrix, -face_rotation[1], glm::vec3(0.0f, 1.0f, 0.0f));  // x-rotation
+//	rotation_matrix = glm::rotate(rotation_matrix, -face_rotation[2], glm::vec3(0.0f, 0.0f, 1.0f));  // tilt
+//	render->setHeadModelTransformation(rotation_matrix);
 	render->draw();
 	screen->drawContents();
 	screen->drawWidgets();

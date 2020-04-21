@@ -1,60 +1,49 @@
-#include "faceshapes.hpp"
+#include "recognizer.hpp"
 
 namespace app
 {
 
-FaceShapes* FaceShapes::instance = nullptr;
-dlib::frontal_face_detector FaceShapes::faceDetector;
-dlib::shape_predictor FaceShapes::faceModel;
+Recognizer* Recognizer::instance = nullptr;
+dlib::frontal_face_detector Recognizer::face_detector;
+dlib::shape_predictor Recognizer::face_model;
 
-bool FaceShapes::bgrbvar = false;
-bool FaceShapes::bgrhbvar = false;
-bool FaceShapes::bgrhbbvar = false;
-bool FaceShapes::graybvar = false;
-bool FaceShapes::grayhbvar = false;
-bool FaceShapes::grayhbbvar = false;
-cv::Scalar FaceShapes::bgrcolval = {255, 0, 0};
-cv::Scalar FaceShapes::bgrhcolval = {255, 0, 0};
-cv::Scalar FaceShapes::bgrhbcolval = {255, 0, 0};
-cv::Scalar FaceShapes::graycolval = {255, 0, 0};
-cv::Scalar FaceShapes::grayhcolval = {255, 0, 0};
-cv::Scalar FaceShapes::grayhbcolval = {255, 0, 0};
+bool Recognizer::bgrbvar = false;
+bool Recognizer::bgrhbvar = false;
+bool Recognizer::bgrhbbvar = false;
+bool Recognizer::graybvar = false;
+bool Recognizer::grayhbvar = false;
+bool Recognizer::grayhbbvar = false;
+cv::Scalar Recognizer::bgrcolval = {255, 0, 0};
+cv::Scalar Recognizer::bgrhcolval = {255, 0, 0};
+cv::Scalar Recognizer::bgrhbcolval = {255, 0, 0};
+cv::Scalar Recognizer::graycolval = {255, 0, 0};
+cv::Scalar Recognizer::grayhcolval = {255, 0, 0};
+cv::Scalar Recognizer::grayhbcolval = {255, 0, 0};
 
 
-FaceShapes::FaceShapes()
+Recognizer::Recognizer()
 {
+	faceDetector = FaceDetector();
 }
+Recognizer::~Recognizer(){}
 
-FaceShapes::~FaceShapes()
-{
-}
-
-FaceShapes* FaceShapes::getInstance() 
+Recognizer* Recognizer::getInstance() 
 {
 	if (instance == nullptr)
 	{
-		instance = new FaceShapes();
-		instance->initialize();
+		instance = new Recognizer();
 	}
 	return instance;
 }
 
-void FaceShapes::releaseInstance()
+void Recognizer::releaseInstance()
 {
 	if (instance != nullptr)
 		delete instance;
 	instance = nullptr;
 }
 
-bool FaceShapes::initialize()
-{
-	faceDetector = dlib::get_frontal_face_detector();
-	dlib::deserialize("../../../data/shape_predictor_68_face_landmarks.dat") >> faceModel;
-	return true;
-}
-
-
-void FaceShapes::detectFaces()
+void Recognizer::detectFaces()
 {
 	// Normalize frame
 	cv::flip(frame, frameBGR, 1);
@@ -64,93 +53,57 @@ void FaceShapes::detectFaces()
 	cv::resize(frameBGR, frameBGRResized, cv::Size(), 0.5, 0.5);
 	cv::GaussianBlur(frameBGRResized, frameBGRResizedBlured, cv::Size( 5, 5 ), 0, 0 );
 	
-	// Detect and draw faces on original frame
-	if (bgrbvar)
-	{
-		IplImage imgBGR = cvIplImage(frameBGR);
-		dlib::cv_image<dlib::bgr_pixel> cimgBGR(&imgBGR);
-		std::vector<dlib::rectangle> detectedFacesBGR = faceDetector(cimgBGR);
-		std::vector<dlib::full_object_detection> faceShapesBGR;
-		for (unsigned long i = 0; i < detectedFacesBGR.size(); ++i)
-			faceShapesBGR.push_back(faceModel(cimgBGR, detectedFacesBGR[i]));
-		if (!faceShapesBGR.empty())
-			for (unsigned long i = 0; i < faceShapesBGR.size(); ++i)
-				drawFaceShape(&frameRGB, faceShapesBGR[i], bgrcolval, 1);
-	}
-	
-	// Detect and draw faces on resized original frame
-	if (bgrhbvar)
-	{
-		IplImage imgBGRResized = cvIplImage(frameBGRResized);
-		dlib::cv_image<dlib::bgr_pixel> cimgBGRResized(&imgBGRResized);
-		std::vector<dlib::rectangle> detectedFacesBGRResized = faceDetector(cimgBGRResized);
-		std::vector<dlib::full_object_detection> faceShapesBGRResized;
-		for (unsigned long i = 0; i < detectedFacesBGRResized.size(); ++i)
-			faceShapesBGRResized.push_back(faceModel(cimgBGRResized, detectedFacesBGRResized[i]));
-		if (!faceShapesBGRResized.empty())
-			for (unsigned long i = 0; i < faceShapesBGRResized.size(); ++i)
-				drawFaceShape(&frameRGB, faceShapesBGRResized[i], bgrhcolval, 2);
-	}
-	
-	// Detect and draw faces on resized and blured original frame
-	if (bgrhbbvar)
-	{
-		IplImage imgBGRResizedBlured = cvIplImage(frameBGRResizedBlured);
-		dlib::cv_image<dlib::bgr_pixel> cimgBGRResizedBlured(&imgBGRResizedBlured);
-		std::vector<dlib::rectangle> detectedFacesBGRResizedBlured = faceDetector(cimgBGRResizedBlured);
-		std::vector<dlib::full_object_detection> faceShapesBGRResizedBlured;
-		for (unsigned long i = 0; i < detectedFacesBGRResizedBlured.size(); ++i)
-			faceShapesBGRResizedBlured.push_back(faceModel(cimgBGRResizedBlured, detectedFacesBGRResizedBlured[i]));
-		if (!faceShapesBGRResizedBlured.empty())
-			for (unsigned long i = 0; i < faceShapesBGRResizedBlured.size(); ++i)
-				drawFaceShape(&frameRGB, faceShapesBGRResizedBlured[i], bgrhbcolval, 2);
-	}
-	
 	// Work with grayscaled frame 
 	cv::cvtColor(frameBGR, frameGray, cv::COLOR_BGR2GRAY);
 	cv::resize(frameGray, frameGrayResized, cv::Size(), 0.5, 0.5);
 	cv::GaussianBlur(frameGrayResized, frameGrayResizedBlured, cv::Size( 5, 5 ), 0, 0 );
 	
+	// Detect and draw faces on original frame
+	if (bgrbvar)
+	{
+		std::vector<Face> faces = faceDetector.detect_faces<dlib::bgr_pixel>(frameBGR);
+		for (Face &face : faces)
+			drawFaceShape(frameRGB, face, bgrcolval, 1);
+	}
+	
+	// Detect and draw faces on resized original frame
+	if (bgrhbvar)
+	{
+		std::vector<Face> faces = faceDetector.detect_faces<dlib::bgr_pixel>(frameBGRResized);
+		for (Face &face : faces)
+			drawFaceShape(frameRGB, face, bgrhcolval, 2);
+	}
+	
+	// Detect and draw faces on resized and blured original frame
+	if (bgrhbbvar)
+	{
+		std::vector<Face> faces = faceDetector.detect_faces<dlib::bgr_pixel>(frameBGRResizedBlured);
+		for (Face &face : faces)
+			drawFaceShape(frameRGB, face, bgrhbcolval, 2);
+	}
+	
 	// Detect and draw faces on grayscaled frame
 	if (graybvar)
 	{
-		IplImage imgGray = cvIplImage(frameGray);
-		dlib::cv_image<unsigned char> cimgGray(&imgGray);
-		std::vector<dlib::rectangle> detectedFacesGray = faceDetector(cimgGray);
-		std::vector<dlib::full_object_detection> faceShapesGray;
-		for (unsigned long i = 0; i < detectedFacesGray.size(); ++i)
-			faceShapesGray.push_back(faceModel(cimgGray, detectedFacesGray[i]));
-		if (!faceShapesGray.empty())
-			for (unsigned long i = 0; i < faceShapesGray.size(); ++i)
-				drawFaceShape(&frameRGB, faceShapesGray[i], graycolval, 1);
+		std::vector<Face> faces = faceDetector.detect_faces<unsigned char>(frameGray);
+		for (Face &face : faces)
+			drawFaceShape(frameRGB, face, graycolval, 1);
 	}
 	
 	// Detect and draw faces on resized grayscaled frame
 	if (grayhbvar)
 	{
-		IplImage imgGrayResized = cvIplImage(frameGrayResized);
-		dlib::cv_image<unsigned char> cimgGrayResized(&imgGrayResized);
-		std::vector<dlib::rectangle> detectedFacesGrayResized = faceDetector(cimgGrayResized);
-		std::vector<dlib::full_object_detection> faceShapesGrayResized;
-		for (unsigned long i = 0; i < detectedFacesGrayResized.size(); ++i)
-			faceShapesGrayResized.push_back(faceModel(cimgGrayResized, detectedFacesGrayResized[i]));
-		if (!faceShapesGrayResized.empty())
-			for (unsigned long i = 0; i < faceShapesGrayResized.size(); ++i)
-				drawFaceShape(&frameRGB, faceShapesGrayResized[i], grayhcolval, 2);
+		std::vector<Face> faces = faceDetector.detect_faces<unsigned char>(frameGrayResized);
+		for (Face &face : faces)
+			drawFaceShape(frameRGB, face, grayhcolval, 2);
 	}
 	
 	// Detect and draw faces on resized and blured grayscaled frame
 	if (grayhbbvar)
 	{
-		IplImage imgGrayResizedBlured = cvIplImage(frameGrayResizedBlured);
-		dlib::cv_image<unsigned char> cimgGrayResizedBlured(&imgGrayResizedBlured);
-		std::vector<dlib::rectangle> detectedFacesGrayResizedBlured = faceDetector(cimgGrayResizedBlured);
-		std::vector<dlib::full_object_detection> faceShapesGrayResizedBlured;
-		for (unsigned long i = 0; i < detectedFacesGrayResizedBlured.size(); ++i)
-			faceShapesGrayResizedBlured.push_back(faceModel(cimgGrayResizedBlured, detectedFacesGrayResizedBlured[i]));
-		if (!faceShapesGrayResizedBlured.empty())
-			for (unsigned long i = 0; i < faceShapesGrayResizedBlured.size(); ++i)
-				drawFaceShape(&frameRGB, faceShapesGrayResizedBlured[i], grayhbcolval, 2);
+		std::vector<Face> faces = faceDetector.detect_faces<unsigned char>(frameGrayResizedBlured);
+		for (Face &face : faces)
+			drawFaceShape(frameRGB, face, grayhbcolval, 2);
 	}
 	
 	//cv::equalizeHist(frameGray, frameGrayEqualized);
@@ -158,12 +111,12 @@ void FaceShapes::detectFaces()
 	//cv::erode(frame, tleftEye, kernel);
 }
 
-void FaceShapes::drawFaceShape(cv::Mat* frame, dlib::full_object_detection shape, cv::Scalar color, int offset)
+void Recognizer::drawFaceShape(cv::Mat &frame, Face face, cv::Scalar color, int offset)
 {
 		// Simple visualization of face detection
-		for (int i = 0; i < 68; i++)
+		for (cv::Point landmark : face.landmarks)
 		{
-			cv::circle(*frame, cvPoint(shape.part(i).x()*offset, shape.part(i).y()*offset), 2, color, -1);
+			cv::circle(frame, cvPoint(landmark.x*offset, landmark.y*offset), 2, color, -1);
 		//	cv::circle(frame, correctedPosition[i], 2, cv::Scalar(255, 0, 0), -1);
 		}
 //		

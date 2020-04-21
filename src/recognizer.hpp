@@ -1,18 +1,11 @@
-#ifndef FACESHAPES_HPP
-#define FACESHAPES_HPP
-
-// dlib
-#include <dlib/opencv.h>
-#include <dlib/image_processing/frontal_face_detector.h>
-#include <dlib/image_processing/render_face_detections.h>
-#include <dlib/image_processing.h>
-
-// OpenCV
-#include <opencv2/core/mat.hpp>
-#include <opencv2/viz/types.hpp>
+#ifndef RECOGNIZER_HPP
+#define RECOGNIZER_HPP
 
 // Inner classes
-#include "kalmanfilter.hpp"
+#include "recognizer/face.hpp"
+#include "recognizer/facedetector.hpp"
+#include "recognizer/landmarksdetector.hpp"
+#include "recognizer/kalmanfilter.hpp"
 
 namespace app
 {
@@ -24,17 +17,9 @@ struct shape
 	cv::Point correctedPosition;
 };
 
-class FaceShapes
+class Recognizer
 {
 public:
-	// Functions
-	static FaceShapes* getInstance();
-	static void releaseInstance();
-	static bool initialize();
-	void detectFaceShape();
-	static void drawFaceShape(cv::Mat* frame, dlib::full_object_detection shape, cv::Scalar color, int offset);
-	
-	
 	// Variables
 	cv::Mat frame; 
 	
@@ -66,21 +51,25 @@ public:
 	static cv::Scalar grayhbcolval;
 	
 	
-private:
-	FaceShapes();
-	~FaceShapes();
-	
 	// Functions
+	static Recognizer* getInstance();
+	static void releaseInstance();
+	void detectFaces();
+	static void drawFaceShape(cv::Mat &frame, Face face, cv::Scalar color, int offset);
 	
 	
+private:
+	Recognizer();
+	~Recognizer();
 	
 	// Variables
-	static FaceShapes* instance;
+	static Recognizer* instance;
+	//std::vector<Face> faces;
+	static dlib::frontal_face_detector face_detector;
+	static dlib::shape_predictor face_model;
+	FaceDetector faceDetector;
 	
-	static dlib::frontal_face_detector faceDetector;
-	static dlib::shape_predictor faceModel;
-	
-	
+	// Functions
 	
 	
 	
@@ -88,4 +77,4 @@ private:
 
 }
 
-#endif // FACESHAPES_HPP
+#endif // RECOGNIZER_HPP

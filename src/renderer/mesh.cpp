@@ -54,10 +54,10 @@ void Mesh::load_vertices(const aiMesh *mesh)
 	for(unsigned int i = 0; i < mesh->mNumVertices; i++)
 	{
 		Vertex vertex;
-		Vec3 vector;
-		vector.x = mesh->mVertices[i].x*;
-		vector.y = mesh->mVertices[i].y*;
-		vector.z = mesh->mVertices[i].z*;
+		glm::vec3 vector;
+		vector.x = mesh->mVertices[i].x;
+		vector.y = mesh->mVertices[i].y;
+		vector.z = mesh->mVertices[i].z;
 		vertex.Position = vector;
 		
 		//vector.x = mesh->mNormals[i].x;
@@ -67,7 +67,7 @@ void Mesh::load_vertices(const aiMesh *mesh)
 		
 		if(mesh->mTextureCoords[0]) 
 		{
-			Vec2 vec;
+			glm::vec2 vec;
 			vec.x = mesh->mTextureCoords[0][i].x;
 			vec.y = mesh->mTextureCoords[0][i].y;
 			vertex.TexCoords = vec;

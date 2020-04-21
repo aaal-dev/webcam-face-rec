@@ -12,7 +12,7 @@
 //#include <pocketsphinx/pocketsphinx.h>
 
 // Inner classes
-#include "faceshapes.hpp"
+#include "recognizer.hpp"
 #include "videoinput.hpp"
 #include "window.hpp"
 
@@ -45,7 +45,7 @@ private:
 	static bool useWebcam;
 	static Window* window;
 	static VideoInput* camera;
-	static FaceShapes* faceshapes;
+	static Recognizer* recognizer;
 	
 	
 };

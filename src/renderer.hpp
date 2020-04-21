@@ -7,6 +7,9 @@
 // GLAD
 #include "glad/glad.h"
 
+// GLM
+#include <glm/gtc/matrix_transform.hpp>
+
 // GLFW
 #include <GLFW/glfw3.h>
 
@@ -24,6 +27,12 @@ class Renderer
 {
 public:
 	
+	// Variables
+	static GLsizei _width;
+	static GLsizei _height;
+	static GLboolean* _data;
+	
+	
 	// Functions
 	static Renderer* getInstance();
 	static void releaseInstance();
@@ -31,20 +40,12 @@ public:
 	void draw();
 	void cleanup();
 	void changeViewport(int bX, int bY, int eX, int eY);
-	
-	// Variables
-	static GLsizei _width;
-	static GLsizei _height;
-	static GLboolean* _data;
-	
+	void setHeadModelTransformation(glm::mat4 transformation);
 	
 	
 private:
 	Renderer();
 	~Renderer();
-	
-	// Functions
-	
 	
 	
 	// Variables
@@ -59,7 +60,12 @@ private:
 	static GLuint* webcamTexture;
 	static GLuint* modelTexture;
 	
-
+	
+	// Functions
+	Mesh setWebcamMesh();
+	Mesh setHeadModelMesh();
+	
+	
 };
 
 }

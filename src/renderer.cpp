@@ -44,86 +44,107 @@ bool Renderer::initialize(GLADloadproc glfwProcAddress)
 		glEnable(GL_CULL_FACE);
 		
 		// Create and compile our GLSL program from the shaders
-		Mesh webcam;
-		webcam.shader = Shader( "../../../data/shader.glsl.vertex", "../../../data/shader.glsl.fragment" );
-		int loc = glGetUniformLocation(webcam.shader.getShaderID(), "u_tex");
-		int samplers[2] = { 0, 1 };
-		glUniform1iv(loc, 2, samplers);
+		Mesh webcam = setWebcamMesh();
+		meshes.push_back(webcam);
 		
-		webcam.vertices = webcam.CreateQuad(-1.0f, 1.0f, 0.0f, 2.0f, 0.0f);
-		
-		glGenBuffers(1, &webcam.VBO);
-		glBindBuffer(GL_ARRAY_BUFFER, webcam.VBO);
-		glBufferData(GL_ARRAY_BUFFER, webcam.vertices.size() * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
-		
-		glGenVertexArrays(1, &webcam.VAO);
-		glBindVertexArray(webcam.VAO);
-		
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
-		
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexCoords)));
-		
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexId)));
-		
-		// Set up index
-		
-		webcam.indices = { 0, 1, 2, 2, 3, 0 };
-		
-		glGenBuffers(1, &webcam.EBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, webcam.EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(webcam.indices), &webcam.indices.front(), GL_STATIC_DRAW);
-		
-		webcamTexture = new GLuint();
-		glGenTextures(1, webcamTexture);
-		glBindTexture(GL_TEXTURE_2D, *webcamTexture);
-		
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		//glEnable(GL_BLEND);
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		//meshes.push_back(webcam);
-		
-		Mesh headModel;
-		headModel.load_model("../../../data/model/female/female.obj");
-		headModel.shader = Shader( "../../../data/shader2.glsl.vertex", "../../../data/shader2.glsl.fragment" );
-		loc = glGetUniformLocation(headModel.shader.getShaderID(), "u_tex");
-		glUniform1iv(loc, 2, samplers);
-		
-		glGenBuffers(1, &headModel.VBO);
-		glBindBuffer(GL_ARRAY_BUFFER, headModel.VBO);
-		glBufferData(GL_ARRAY_BUFFER, headModel.vertices.size() * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
-		
-		glGenVertexArrays(1, &headModel.VAO);
-		glBindVertexArray(headModel.VAO);
-		
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
-		
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexCoords)));
-		
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexId)));
-		
-		// Set up index
-		glGenBuffers(1, &headModel.EBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, headModel.EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(headModel.indices), &headModel.indices.front(), GL_STATIC_DRAW);
-		
-		//glEnable(GL_BLEND);
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		Mesh headModel = setHeadModelMesh();
+		glm::mat4 normalization(1.0);
+		normalization = glm::scale(normalization, glm::vec3(1.2, 1.2, 1.2));
+		normalization = glm::translate(normalization, glm::vec3(0, 5.0, 0));
+		normalization = glm::rotate(normalization, 1.55f, glm::vec3(0.0f, 1.0f, 0.0f));
+		headModel.normalization = normalization;
 		meshes.push_back(headModel);
+		
+		
 		
 		return true;
 	}
 	fprintf( stderr, "Failed to initialize OpenGL context.\n" );
 	//getchar();
 	return false;
+}
+
+Mesh Renderer::setWebcamMesh()
+{
+	Mesh webcam;
+	webcam.shader = Shader( "../../../data/shader.glsl.vertex", "../../../data/shader.glsl.fragment" );
+	int loc = glGetUniformLocation(webcam.shader.getShaderID(), "u_tex");
+	int samplers[2] = { 0, 1 };
+	glUniform1iv(loc, 2, samplers);
+	
+	webcam.vertices = webcam.CreateQuad(-1.0f, 1.0f, 0.0f, 2.0f, 0.0f);
+	
+	glGenBuffers(1, &webcam.VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, webcam.VBO);
+	glBufferData(GL_ARRAY_BUFFER, webcam.vertices.size() * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
+	
+	glGenVertexArrays(1, &webcam.VAO);
+	glBindVertexArray(webcam.VAO);
+	
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+	
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexCoords)));
+	
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexId)));
+	
+	// Set up index
+	webcam.indices = { 0, 1, 2, 2, 3, 0 };
+	
+	glGenBuffers(1, &webcam.EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, webcam.EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(webcam.indices), &webcam.indices.front(), GL_STATIC_DRAW);
+	
+	webcamTexture = new GLuint();
+	glGenTextures(1, webcamTexture);
+	glBindTexture(GL_TEXTURE_2D, *webcamTexture);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	return webcam;
+}
+
+Mesh Renderer::setHeadModelMesh()
+{
+	Mesh headModel;
+	headModel.load_model("../../../data/model/female/female.obj");
+	headModel.shader = Shader( "../../../data/shader2.glsl.vertex", "../../../data/shader2.glsl.fragment" );
+	
+	glGenBuffers(1, &headModel.VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, headModel.VBO);
+	glBufferData(GL_ARRAY_BUFFER, headModel.vertices.size() * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
+	
+	glGenVertexArrays(1, &headModel.VAO);
+	glBindVertexArray(headModel.VAO);
+	
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+	
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexCoords)));
+	
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, TexId)));
+	
+	// Set up index
+	glGenBuffers(1, &headModel.EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, headModel.EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(headModel.indices), &headModel.indices.front(), GL_STATIC_DRAW);
+	
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	return headModel;
+}
+
+void Renderer::setHeadModelTransformation(glm::mat4 transformation)
+{
+	meshes[1].transformation = transformation;
 }
 
 void Renderer::draw()
@@ -133,6 +154,15 @@ void Renderer::draw()
 	for (const auto &mesh : meshes)
 	{
 		glUseProgram(mesh.shader.getShaderID());
+		
+//		GLuint MatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "MVP");
+//		glm::mat4 ModelMatrix = glm::mat4(1.0);
+//		glm::mat4 MVP = mesh.projectionMatrix * mesh.viewMatrix * ModelMatrix;
+//		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+		GLuint transformationMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "transformation");
+		glm::mat4 mesh_transform = mesh.normalization * mesh.transformation;
+		glUniformMatrix4fv(transformationMatrixID, 1, GL_FALSE, &mesh_transform[0][0]);
+		
 		glBindTexture(GL_TEXTURE_2D, *webcamTexture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, _data);
 		
