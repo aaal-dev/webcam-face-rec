@@ -19,6 +19,7 @@ public:
 	cv::Mat frame;
 	cv::Rect face_rect;
 	std::vector<cv::Point> landmarks;
+	std::vector<cv::Rect> eyes_rects;
 	cv::Point nose_base;
 	cv::Point nose_tip;
 	cv::Point mouth_base;

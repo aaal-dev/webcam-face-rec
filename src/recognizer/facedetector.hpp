@@ -22,6 +22,9 @@ public:
 private:
 	// Variables
 	cv::CascadeClassifier face_classifier;
+	cv::CascadeClassifier eye_classifier;
+	cv::CascadeClassifier lefteye_classifier;
+	cv::CascadeClassifier righteye_classifier;
 	LandmarksDetector* landmarksDetector;
 	
 	
