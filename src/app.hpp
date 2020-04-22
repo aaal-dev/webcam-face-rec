@@ -1,6 +1,8 @@
 #ifndef APP_H
 #define APP_H
 
+#include <thread>
+
 // Live2D
 
 
@@ -22,6 +24,8 @@ namespace app
 class App
 {
 public:
+	// Variables
+	
 	
 	// Functions
 	static App* getInstance();
@@ -30,14 +34,9 @@ public:
 	bool run();
 	
 	
-	// Variables
-	
-	
 private:
 	App();
 	~App();
-	
-	// Functions
 	
 	
 	// Variables
@@ -47,6 +46,10 @@ private:
 	static VideoInput* camera;
 	static Recognizer* recognizer;
 	
+	
+	// Functions
+	void grabFrame();
+	void generateColorVariables(std::map<unsigned int, nanogui::Color> &ngColors, std::map<unsigned int, cv::Scalar> &cvColors);
 	
 };
 

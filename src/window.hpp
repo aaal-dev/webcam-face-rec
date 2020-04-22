@@ -1,7 +1,8 @@
 #ifndef WINDOW_HPP
 #define WINDOW_HPP
 
-#include <stdio.h>
+//#include <stdio.h>
+#include <map>
 
 // Inner classes
 #include "renderer.hpp"
@@ -15,42 +16,33 @@ public:
 	// Functions
 	static Window* getInstance();
 	static void releaseInstance();
-	static bool initialize();
-	static bool initializeGL();
-	static bool initializeGui();
-	static bool createWindow();
-	static bool isClosingWindows();
-	static void configureWindow();
-	static void updateWindow();
-	static void terminateWindow();
-	static void configureGui();
-	static void updateTitle();
+	bool initialize();
+	bool initializeGL();
+	bool initializeGui();
+	bool createWindow();
+	bool isClosingWindows();
+	void configureWindow();
+	void updateWindow();
+	void terminateWindow();
+	void configureGui();
+	void updateTitle();
 	void draw();
-	static void cleanup();
+	void cleanup();
 	
 	// Variables
-	static char* title;
+	char* title;
 	static Renderer* render;
-	static bool bgrbvar;
-	static bool bgrhbvar;
-	static bool bgrhbbvar;
-	static bool graybvar;
-	static bool grayhbvar;
-	static bool grayhbbvar;
-	static nanogui::Color bgrcolval;
-	static nanogui::Color bgrhcolval;
-	static nanogui::Color bgrhbcolval;
-	static nanogui::Color graycolval;
-	static nanogui::Color grayhcolval;
-	static nanogui::Color grayhbcolval;
+	std::map<unsigned int, bool> boolVariables;
+	std::map<unsigned int, nanogui::Color> colorVariables;
 	
 private:
 	Window();
 	~Window();
 	
 	// Functions
-	static void startTimer();
-	static float getSpeedOnMS();
+	void startTimer();
+	float getSpeedOnMS();
+	
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 	static void cursor_position_callback(GLFWwindow* window, double x, double y);
@@ -61,18 +53,18 @@ private:
 	
 	// Variables
 	static Window* instance;
-	static GLFWwindow* window;
+	GLFWwindow* window;
 	static bool drawActualPoints;
 	static bool drawCorrectedPoints;
 	
-	static int width;
-	static int height;
-	static double startTime;
-	static double numberOfTicks;
-	static float speed;
+	int width;
+	int height;
+	double startTime;
+	double numberOfTicks;
+	float speed;
 	
 	static nanogui::Screen* screen;
-	static nanogui::FormHelper* gui;
+	nanogui::FormHelper* gui;
 	
 	
 };

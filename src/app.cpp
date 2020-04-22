@@ -47,47 +47,33 @@ bool App::run()
 	window->configureWindow();
 	window->configureGui();
 	useWebcam = camera->openCamera();
+	std::thread t(&App::grabFrame, this);
+	t.detach(); // as opposed to .join, which runs on the current thread
 	while (!window->isClosingWindows()) 
 	{
 		window->updateWindow();
 		if (useWebcam)
 		{
 			// Grab a frame
-			recognizer->frame = camera->grabFrame();
-			recognizer->detectFaces();
-			
-			//glm::mat4 transformation = recognizer->
-			//window->render->setHeadModelTransformation(transformation);
-			
-			window->render->_width   = recognizer->frameRGB.cols;
-			window->render->_height  = recognizer->frameRGB.rows;
-			window->render->_data    = recognizer->frameRGB.data;
-			
-			recognizer->bgrbvar      = window->bgrbvar;
-			recognizer->bgrhbvar     = window->bgrhbvar;
-			recognizer->bgrhbbvar    = window->bgrhbbvar;
-			recognizer->graybvar     = window->graybvar;
-			recognizer->grayhbvar    = window->grayhbvar;
-			recognizer->grayhbbvar   = window->grayhbbvar;
-			
-			recognizer->bgrcolval[0]    = window->bgrcolval.r()*255;
-			recognizer->bgrcolval[1]    = window->bgrcolval.g()*255;
-			recognizer->bgrcolval[2]    = window->bgrcolval.b()*255;
-			recognizer->bgrhcolval[0]   = window->bgrhcolval.r()*255;
-			recognizer->bgrhcolval[1]   = window->bgrhcolval.g()*255;
-			recognizer->bgrhcolval[2]   = window->bgrhcolval.b()*255;
-			recognizer->bgrhbcolval[0]  = window->bgrhbcolval.r()*255;
-			recognizer->bgrhbcolval[1]  = window->bgrhbcolval.g()*255;
-			recognizer->bgrhbcolval[2]  = window->bgrhbcolval.b()*255;
-			recognizer->graycolval[0]   = window->graycolval.r()*255;
-			recognizer->graycolval[1]   = window->graycolval.g()*255;
-			recognizer->graycolval[2]   = window->graycolval.b()*255;
-			recognizer->grayhcolval[0]  = window->grayhcolval.r()*255;
-			recognizer->grayhcolval[1]  = window->grayhcolval.g()*255;
-			recognizer->grayhcolval[2]  = window->grayhcolval.b()*255;
-			recognizer->grayhbcolval[0] = window->grayhbcolval.r()*255;
-			recognizer->grayhbcolval[1] = window->grayhbcolval.g()*255;
-			recognizer->grayhbcolval[2] = window->grayhbcolval.b()*255;
+			if (camera->isFrameGrabed())
+			{
+				recognizer->frame = camera->getFrame();
+				recognizer->detectFaces();
+				
+				std::array<float,3> face_rotation = recognizer->get_face_rotation();
+				glm::mat4 rotation_matrix(1.0);
+				rotation_matrix = glm::rotate(rotation_matrix,  face_rotation[0], glm::vec3(1.0f, 0.0f, 0.0f));  // forward-back
+				rotation_matrix = glm::rotate(rotation_matrix, -face_rotation[1], glm::vec3(0.0f, 1.0f, 0.0f));  // x-rotation
+				rotation_matrix = glm::rotate(rotation_matrix, -face_rotation[2], glm::vec3(0.0f, 0.0f, 1.0f));  // tilt
+				window->render->setHeadModelTransformation(rotation_matrix);
+				
+				window->render->_width   = recognizer->frameRGB.cols;
+				window->render->_height  = recognizer->frameRGB.rows;
+				window->render->_data    = recognizer->frameRGB.data;
+				
+				recognizer->boolVariables  = window->boolVariables;
+				generateColorVariables(window->colorVariables, recognizer->colorVariables);
+			}
 		}
 		window->draw();
 	}
@@ -103,6 +89,23 @@ bool App::run()
 	window->releaseInstance();
 	
 	return true;
+}
+
+void App::grabFrame()
+{
+	while (camera->isOpened())
+		camera->grabFrame();
+	return;
+}
+
+void App::generateColorVariables(std::map<unsigned int, nanogui::Color> &ngColors, std::map<unsigned int, cv::Scalar> &cvColors)
+{
+	for (auto &ngColor : ngColors)
+	{
+		cvColors[ngColor.first][0] = ngColor.second.r()*255;
+		cvColors[ngColor.first][1] = ngColor.second.g()*255;
+		cvColors[ngColor.first][2] = ngColor.second.b()*255;
+	}
 }
 
 }

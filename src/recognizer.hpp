@@ -37,25 +37,16 @@ public:
 	std::vector<shape> outerMouthShape;
 	std::vector<shape> innerMouthShape;
 	
-	static bool bgrbvar;
-	static bool bgrhbvar;
-	static bool bgrhbbvar;
-	static bool graybvar;
-	static bool grayhbvar;
-	static bool grayhbbvar;
-	static cv::Scalar bgrcolval;
-	static cv::Scalar bgrhcolval;
-	static cv::Scalar bgrhbcolval;
-	static cv::Scalar graycolval;
-	static cv::Scalar grayhcolval;
-	static cv::Scalar grayhbcolval;
-	
+	std::map<unsigned int, bool> boolVariables;
+	std::map<unsigned int, cv::Scalar> colorVariables;
+	std::array<float,3> face_rotation;
 	
 	// Functions
 	static Recognizer* getInstance();
 	static void releaseInstance();
 	void detectFaces();
-	static void drawFaceShape(cv::Mat &frame, Face face, cv::Scalar color, int offset);
+	void drawFaceShape(cv::Mat &frame, Face face, cv::Scalar color, int offset);
+	std::array<float,3> get_face_rotation();
 	
 	
 private:
@@ -65,8 +56,8 @@ private:
 	// Variables
 	static Recognizer* instance;
 	//std::vector<Face> faces;
-	static dlib::frontal_face_detector face_detector;
-	static dlib::shape_predictor face_model;
+	dlib::frontal_face_detector face_detector;
+	dlib::shape_predictor face_model;
 	FaceDetector faceDetector;
 	
 	// Functions

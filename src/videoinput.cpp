@@ -6,7 +6,11 @@ namespace app
 VideoInput* VideoInput::instance = nullptr;
 cv::VideoCapture* VideoInput::webcam = nullptr;
 
-VideoInput::VideoInput(){}
+VideoInput::VideoInput()
+{
+	hasFrame = false;
+}
+
 VideoInput::~VideoInput(){}
 
 VideoInput* VideoInput::getInstance() 
@@ -34,11 +38,26 @@ bool VideoInput::openCamera()
 	return false;
 }
 
-cv::Mat VideoInput::grabFrame()
+bool VideoInput::isOpened()
 {
-	cv::Mat frame;
+	return webcam->isOpened();
+}
+
+void VideoInput::grabFrame()
+{
 	*webcam >> frame;
+	hasFrame = true;
+}
+
+cv::Mat VideoInput::getFrame()
+{
+	hasFrame = false;
 	return frame;
+}
+
+bool VideoInput::isFrameGrabed()
+{
+	return hasFrame;
 }
 
 void VideoInput::releaseCamera()

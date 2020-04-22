@@ -10,27 +10,34 @@ namespace app
 class VideoInput
 {
 public:
+	// Variables
+	
+	
 	// Functions
 	static VideoInput* getInstance();
 	static void releaseInstance();
 	bool openCamera();
-	cv::Mat grabFrame();
+	bool isOpened();
+	void grabFrame();
+	cv::Mat getFrame();
+	bool isFrameGrabed();
 	static void releaseCamera();
-	
-	
-	// Variables
 	
 	
 private:
 	VideoInput();
 	~VideoInput();
 	
-	// Functions
-	
 	
 	// Variables
 	static VideoInput* instance;
 	static cv::VideoCapture* webcam;
+	cv::Mat frame;
+	bool hasFrame;
+	
+	// Functions
+	
+	
 };
 
 }

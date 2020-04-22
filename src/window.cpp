@@ -4,39 +4,29 @@ namespace app
 {
 
 Window* Window::instance = nullptr;
-GLFWwindow* Window::window = nullptr;
+Renderer* Window::render = nullptr;
+nanogui::Screen* Window::screen = nullptr;
 bool Window::drawActualPoints = false;
 bool Window::drawCorrectedPoints = false;
-double Window::startTime;
-double Window::numberOfTicks;
-float Window::speed;
-int Window::width;
-int Window::height;
-char* Window::title = (char* )"Demo App";
-nanogui::Screen* Window::screen = nullptr;
-nanogui::FormHelper* Window::gui = nullptr;
-bool Window::bgrbvar = false;
-bool Window::bgrhbvar = false;
-bool Window::bgrhbbvar = false;
-bool Window::graybvar = false;
-bool Window::grayhbvar = false;
-bool Window::grayhbbvar = false;
-nanogui::Color Window::bgrcolval(1.0f, 0.0f, 0.0f, 1.f);
-nanogui::Color Window::bgrhcolval(0.0f, 0.0f, 1.0f, 1.f);
-nanogui::Color Window::bgrhbcolval(1.0f, 0.0f, 1.0f, 1.f);
-nanogui::Color Window::graycolval(0.0f, 1.0f, 0.0f, 1.f);
-nanogui::Color Window::grayhcolval(1.0f, 1.0f, 0.0f, 1.f);
-nanogui::Color Window::grayhbcolval(0.0f, 1.0f, 1.0f, 1.f);
-
-Renderer* Window::render = nullptr;
 
 Window::Window()
 {
-	if (instance->initialize())
+	if (initialize())
 	{
-		instance->startTimer();
+		startTimer();
 		render = Renderer::getInstance();
 	}
+	window = nullptr;
+	
+	title = (char* )"Demo App";
+	gui = nullptr;
+	colorVariables = {{0, nanogui::Color(1.0f, 0.0f, 0.0f, 1.f)},
+					  {1, nanogui::Color(0.0f, 0.0f, 1.0f, 1.f)},
+					  {2, nanogui::Color(1.0f, 0.0f, 1.0f, 1.f)},
+					  {3, nanogui::Color(0.0f, 1.0f, 0.0f, 1.f)},
+					  {4, nanogui::Color(1.0f, 1.0f, 0.0f, 1.f)},
+					  {5, nanogui::Color(0.0f, 1.0f, 1.0f, 1.f)}};
+	
 }
 
 Window::~Window(){}
@@ -54,8 +44,6 @@ void Window::releaseInstance()
 		delete instance;
 	instance = nullptr;
 }
-
-
 
 bool Window::initialize()
 {
@@ -153,24 +141,24 @@ void Window::configureGui()
 {
 	gui = new nanogui::FormHelper(screen);
 	nanogui::ref<nanogui::Window> nanoguiWindow = gui->addWindow(Eigen::Vector2i(10, 10), "Settings");
-
-	gui->addVariable("Full-sized BGR", bgrbvar);
-	gui->addVariable("Color", bgrcolval);
 	
-	gui->addVariable("Half-sized BGR", bgrhbvar);
-	gui->addVariable("Color", bgrhcolval);
+	gui->addVariable("Full-sized BGR", boolVariables[0]);
+	gui->addVariable("Color", colorVariables[0]);
 	
-	gui->addVariable("Blured half-sized BGR", bgrhbbvar);
-	gui->addVariable("Color", bgrhbcolval);
+	gui->addVariable("Half-sized BGR", boolVariables[1]);
+	gui->addVariable("Color", colorVariables[1]);
 	
-	gui->addVariable("Full-sized GRAY", graybvar);
-	gui->addVariable("Color", graycolval);
+	gui->addVariable("Blured half-sized BGR", boolVariables[2]);
+	gui->addVariable("Color", colorVariables[2]);
 	
-	gui->addVariable("Half-sized GRAY", grayhbvar);
-	gui->addVariable("Color", grayhcolval);
+	gui->addVariable("Full-sized GRAY", boolVariables[3]);
+	gui->addVariable("Color", colorVariables[3]);
 	
-	gui->addVariable("Blured half-sized GRAY", grayhbbvar);
-	gui->addVariable("Color", grayhbcolval);
+	gui->addVariable("Half-sized GRAY", boolVariables[4]);
+	gui->addVariable("Color", colorVariables[4]);
+	
+	gui->addVariable("Blured half-sized GRAY", boolVariables[5]);
+	gui->addVariable("Color", colorVariables[5]);
 	
 	screen->setVisible(true);
 	screen->performLayout();

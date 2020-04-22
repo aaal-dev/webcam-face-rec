@@ -2,6 +2,7 @@
 #define FACEDETECTOR_HPP
 
 #include <vector>
+#include <array>
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -34,6 +35,7 @@ private:
 	cv::Point get_mouth_base(const Face &face);
 	double get_theta(const Face &face);
 	double get_tau(const Face &face);
+	std::array<float,3> detect_face_gaze(const Face &face);
 };
 
 #endif // FACEDETECTOR_HPP
