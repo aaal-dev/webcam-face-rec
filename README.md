@@ -18,3 +18,4 @@ GLM - (OpenGL Mathematics) - https://github.com/g-truc/glm
 OpenCV - (Open Source Computer Vision Library) - https://github.com/opencv/opencv  
 dlib - (Machine learning and data analysis) - https://github.com/davisking/dlib  
 NanoGUI - (Minimalistic GUI library for OpenGL) - https://github.com/wjakob/nanogui  
+AssImp - (Open-Asset-Importer-Library) - https://github.com/assimp/assimp
