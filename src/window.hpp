@@ -32,8 +32,9 @@ public:
 	// Variables
 	char* title;
 	static Renderer* render;
-	std::map<unsigned int, bool> boolVariables;
-	std::map<unsigned int, nanogui::Color> colorVariables;
+	std::map<unsigned int, bool> boolToRecognizer;
+	std::map<std::string, bool> boolToRenderer;
+	std::map<unsigned int, nanogui::Color> colorToRecognizer;
 	
 private:
 	Window();

@@ -20,12 +20,14 @@ Window::Window()
 	
 	title = (char* )"Demo App";
 	gui = nullptr;
-	colorVariables = {{0, nanogui::Color(1.0f, 0.0f, 0.0f, 1.f)},
-					  {1, nanogui::Color(0.0f, 0.0f, 1.0f, 1.f)},
-					  {2, nanogui::Color(1.0f, 0.0f, 1.0f, 1.f)},
-					  {3, nanogui::Color(0.0f, 1.0f, 0.0f, 1.f)},
-					  {4, nanogui::Color(1.0f, 1.0f, 0.0f, 1.f)},
-					  {5, nanogui::Color(0.0f, 1.0f, 1.0f, 1.f)}};
+	boolToRenderer = {{"webcam", false}, 
+					  {"head", false}};
+	colorToRecognizer = {{0, nanogui::Color(1.0f, 0.0f, 0.0f, 1.f)},
+						 {1, nanogui::Color(0.0f, 0.0f, 1.0f, 1.f)},
+						 {2, nanogui::Color(1.0f, 0.0f, 1.0f, 1.f)},
+						 {3, nanogui::Color(0.0f, 1.0f, 0.0f, 1.f)},
+						 {4, nanogui::Color(1.0f, 1.0f, 0.0f, 1.f)},
+						 {5, nanogui::Color(0.0f, 1.0f, 1.0f, 1.f)}};
 	
 }
 
@@ -140,25 +142,33 @@ void Window::terminateWindow()
 void Window::configureGui()
 {
 	gui = new nanogui::FormHelper(screen);
-	nanogui::ref<nanogui::Window> nanoguiWindow = gui->addWindow(Eigen::Vector2i(10, 10), "Settings");
+	//nanogui::ref<nanogui::Window> nanoguiWindow = 
+	gui->addWindow(Eigen::Vector2i(10, 10), "Settings");
 	
-	gui->addVariable("Full-sized BGR", boolVariables[0]);
-	gui->addVariable("Color", colorVariables[0]);
+	gui->addGroup("Use frame");
 	
-	gui->addVariable("Half-sized BGR", boolVariables[1]);
-	gui->addVariable("Color", colorVariables[1]);
+	gui->addVariable("Full-sized BGR", boolToRecognizer[0]);
+	gui->addVariable("Color", colorToRecognizer[0]);
 	
-	gui->addVariable("Blured half-sized BGR", boolVariables[2]);
-	gui->addVariable("Color", colorVariables[2]);
+	gui->addVariable("Half-sized BGR", boolToRecognizer[1]);
+	gui->addVariable("Color", colorToRecognizer[1]);
 	
-	gui->addVariable("Full-sized GRAY", boolVariables[3]);
-	gui->addVariable("Color", colorVariables[3]);
+	gui->addVariable("Blured half-sized BGR", boolToRecognizer[2]);
+	gui->addVariable("Color", colorToRecognizer[2]);
 	
-	gui->addVariable("Half-sized GRAY", boolVariables[4]);
-	gui->addVariable("Color", colorVariables[4]);
+	gui->addVariable("Full-sized gray", boolToRecognizer[3]);
+	gui->addVariable("Color", colorToRecognizer[3]);
 	
-	gui->addVariable("Blured half-sized GRAY", boolVariables[5]);
-	gui->addVariable("Color", colorVariables[5]);
+	gui->addVariable("Half-sized gray", boolToRecognizer[4]);
+	gui->addVariable("Color", colorToRecognizer[4]);
+	
+	gui->addVariable("Blured half-sized gray", boolToRecognizer[5]);
+	gui->addVariable("Color", colorToRecognizer[5]);
+	
+	gui->addGroup("Meshes");
+	
+	gui->addVariable("Webcam", boolToRenderer.at("webcam"));
+	gui->addVariable("Face model", boolToRenderer.at("head"));
 	
 	screen->setVisible(true);
 	screen->performLayout();
@@ -172,6 +182,7 @@ void Window::draw()
 //	rotation_matrix = glm::rotate(rotation_matrix, -face_rotation[1], glm::vec3(0.0f, 1.0f, 0.0f));  // x-rotation
 //	rotation_matrix = glm::rotate(rotation_matrix, -face_rotation[2], glm::vec3(0.0f, 0.0f, 1.0f));  // tilt
 //	render->setHeadModelTransformation(rotation_matrix);
+	render->setDrawProperties(boolToRenderer);
 	render->draw();
 	screen->drawContents();
 	screen->drawWidgets();

@@ -11,12 +11,12 @@ Recognizer::Recognizer()
 {
 	faceDetector = FaceDetector();
 	cv::Scalar color(255, 0, 0);
-	colorVariables = {{0, color}, 
-					  {1, color},
-					  {2, color},
-					  {3, color},
-					  {4, color},
-					  {5, color}};
+	colorFromGui = {{0, color}, 
+					{1, color},
+					{2, color},
+					{3, color},
+					{4, color},
+					{5, color}};
 }
 Recognizer::~Recognizer(){}
 
@@ -52,55 +52,55 @@ void Recognizer::detectFaces()
 	cv::GaussianBlur(frameGrayResized, frameGrayResizedBlured, cv::Size( 5, 5 ), 0, 0 );
 	
 	// Detect and draw faces on original frame
-	if (boolVariables[0])
+	if (boolFromGui[0])
 	{
 		std::vector<Face> faces = faceDetector.detect_faces<dlib::bgr_pixel>(frameBGR);
 		for (Face &face : faces)
 		{
 			face_rotation = face.rotation;
-			drawFaceShape(frameRGB, face, colorVariables[0], 1);
+			drawFaceShape(frameRGB, face, colorFromGui[0], 1);
 			
 		}
 	}
 	
 	// Detect and draw faces on resized original frame
-	if (boolVariables[1])
+	if (boolFromGui[1])
 	{
 		std::vector<Face> faces = faceDetector.detect_faces<dlib::bgr_pixel>(frameBGRResized);
 		for (Face &face : faces)
-			drawFaceShape(frameRGB, face, colorVariables[1], 2);
+			drawFaceShape(frameRGB, face, colorFromGui[1], 2);
 	}
 	
 	// Detect and draw faces on resized and blured original frame
-	if (boolVariables[2])
+	if (boolFromGui[2])
 	{
 		std::vector<Face> faces = faceDetector.detect_faces<dlib::bgr_pixel>(frameBGRResizedBlured);
 		for (Face &face : faces)
-			drawFaceShape(frameRGB, face, colorVariables[2], 2);
+			drawFaceShape(frameRGB, face, colorFromGui[2], 2);
 	}
 	
 	// Detect and draw faces on grayscaled frame
-	if (boolVariables[3])
+	if (boolFromGui[3])
 	{
 		std::vector<Face> faces = faceDetector.detect_faces<unsigned char>(frameGray);
 		for (Face &face : faces)
-			drawFaceShape(frameRGB, face, colorVariables[3], 1);
+			drawFaceShape(frameRGB, face, colorFromGui[3], 1);
 	}
 	
 	// Detect and draw faces on resized grayscaled frame
-	if (boolVariables[4])
+	if (boolFromGui[4])
 	{
 		std::vector<Face> faces = faceDetector.detect_faces<unsigned char>(frameGrayResized);
 		for (Face &face : faces)
-			drawFaceShape(frameRGB, face, colorVariables[4], 2);
+			drawFaceShape(frameRGB, face, colorFromGui[4], 2);
 	}
 	
 	// Detect and draw faces on resized and blured grayscaled frame
-	if (boolVariables[5])
+	if (boolFromGui[5])
 	{
 		std::vector<Face> faces = faceDetector.detect_faces<unsigned char>(frameGrayResizedBlured);
 		for (Face &face : faces)
-			drawFaceShape(frameRGB, face, colorVariables[5], 2);
+			drawFaceShape(frameRGB, face, colorFromGui[5], 2);
 	}
 	
 	//cv::equalizeHist(frameGray, frameGrayEqualized);

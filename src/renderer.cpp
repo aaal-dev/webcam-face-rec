@@ -55,8 +55,6 @@ bool Renderer::initialize(GLADloadproc glfwProcAddress)
 		headModel.normalization = normalization;
 		meshes.push_back(headModel);
 		
-		
-		
 		return true;
 	}
 	fprintf( stderr, "Failed to initialize OpenGL context.\n" );
@@ -67,6 +65,7 @@ bool Renderer::initialize(GLADloadproc glfwProcAddress)
 Mesh Renderer::setWebcamMesh()
 {
 	Mesh webcam;
+	webcam.name = "webcam";
 	webcam.shader = Shader( "../../../data/shader.glsl.vertex", "../../../data/shader.glsl.fragment" );
 	int loc = glGetUniformLocation(webcam.shader.getShaderID(), "u_tex");
 	int samplers[2] = { 0, 1 };
@@ -113,6 +112,7 @@ Mesh Renderer::setWebcamMesh()
 Mesh Renderer::setHeadModelMesh()
 {
 	Mesh headModel;
+	headModel.name = "head";
 	//headModel.load_model("../../../data/model/cartoon/head.obj");
 	headModel.load_model("../../../data/model/female/female2.obj");
 	headModel.shader = Shader( "../../../data/shader2.glsl.vertex", "../../../data/shader2.glsl.fragment" );
@@ -157,7 +157,9 @@ Mesh Renderer::setHeadModelMesh()
 
 void Renderer::setHeadModelTransformation(glm::mat4 transformation)
 {
-	meshes[1].transformation = transformation;
+	if (meshes.size() > 0)
+		
+		meshes[meshes.size()-1].transformation = transformation;
 }
 
 void Renderer::draw()
@@ -171,30 +173,33 @@ void Renderer::draw()
 	
 	for (const auto &mesh : meshes)
 	{
-		glUseProgram(mesh.shader.getShaderID());
-		
-		float aspect_ratio = (float)_width / (float)_height;
-		
-		GLuint modelMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "model");
-		glm::mat4 mesh_transform = mesh.normalization * mesh.transformation;
-		glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, &mesh_transform[0][0]);
-		
-		GLuint viewMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "view");
-		glm::mat4 view = glm::lookAt(glm::vec3(15.0, 5.0, 0.0), glm::vec3(0.0, 5.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-		glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, &view[0][0]);
-		
-		GLuint projectionMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "projection");
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect_ratio, 0.5f, 100.0f);
-		glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projection[0][0]);
-		
-		glBindTexture(GL_TEXTURE_2D, *webcamTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, _data);
-		
-		glBindBuffer(GL_ARRAY_BUFFER, mesh.VBO);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, mesh.vertices.size() * sizeof(Vertex), &mesh.vertices.front());
-		
-		glBindVertexArray(mesh.VAO);
-		glDrawElements(GL_TRIANGLES, mesh.vertices.size() * sizeof(Vertex), GL_UNSIGNED_INT, 0);
+		if (mesh.isDrawing)
+		{
+			glUseProgram(mesh.shader.getShaderID());
+			
+			float aspect_ratio = (float)_width / (float)_height;
+			
+			GLuint modelMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "model");
+			glm::mat4 mesh_transform = mesh.normalization * mesh.transformation;
+			glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, &mesh_transform[0][0]);
+			
+			GLuint viewMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "view");
+			glm::mat4 view = glm::lookAt(glm::vec3(15.0, 5.0, 0.0), glm::vec3(0.0, 5.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+			glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, &view[0][0]);
+			
+			GLuint projectionMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "projection");
+			glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect_ratio, 0.5f, 100.0f);
+			glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projection[0][0]);
+			
+			glBindTexture(GL_TEXTURE_2D, *webcamTexture);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, _data);
+			
+			glBindBuffer(GL_ARRAY_BUFFER, mesh.VBO);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, mesh.vertices.size() * sizeof(Vertex), &mesh.vertices.front());
+			
+			glBindVertexArray(mesh.VAO);
+			glDrawElements(GL_TRIANGLES, mesh.vertices.size() * sizeof(Vertex), GL_UNSIGNED_INT, 0);
+		}
 	}
 }
 
@@ -214,6 +219,17 @@ void Renderer::cleanup()
 void Renderer::changeViewport(int bX, int bY, int eX, int eY)
 {
 	glViewport(bX, bY, eX, eY);
+}
+
+void Renderer::setDrawProperties(std::map<std::string, bool> boolFromGui)
+{
+	for (Mesh &mesh : meshes)
+	{
+		if (mesh.name == "webcam")
+			mesh.isDrawing = boolFromGui.at(mesh.name);	
+		if (mesh.name == "head")
+			mesh.isDrawing = boolFromGui.at(mesh.name);
+	}
 }
 
 }

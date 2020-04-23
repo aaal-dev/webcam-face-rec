@@ -37,8 +37,8 @@ public:
 	std::vector<shape> outerMouthShape;
 	std::vector<shape> innerMouthShape;
 	
-	std::map<unsigned int, bool> boolVariables;
-	std::map<unsigned int, cv::Scalar> colorVariables;
+	std::map<unsigned int, bool> boolFromGui;
+	std::map<unsigned int, cv::Scalar> colorFromGui;
 	std::array<float,3> face_rotation;
 	
 	// Functions

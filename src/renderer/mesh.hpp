@@ -28,6 +28,7 @@ public:
 	~Mesh();
 	
 	// Variables
+	std::string name;
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 	glm::vec3 base_color;
@@ -35,6 +36,7 @@ public:
 	GLuint VAO;
 	GLuint VBO;
 	GLuint EBO;
+	bool isDrawing;
 	
 	glm::mat4 normalization = glm::mat4(1.0);
 	glm::mat4 transformation = glm::mat4(1.0);

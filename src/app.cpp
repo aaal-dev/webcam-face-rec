@@ -48,7 +48,7 @@ bool App::run()
 	window->configureGui();
 	useWebcam = camera->openCamera();
 	std::thread t(&App::grabFrame, this);
-	t.detach(); // as opposed to .join, which runs on the current thread
+	t.detach();
 	while (!window->isClosingWindows()) 
 	{
 		window->updateWindow();
@@ -71,8 +71,9 @@ bool App::run()
 				window->render->_height  = recognizer->frameRGB.rows;
 				window->render->_data    = recognizer->frameRGB.data;
 				
-				recognizer->boolVariables  = window->boolVariables;
-				generateColorVariables(window->colorVariables, recognizer->colorVariables);
+				// Deliver variables from gui to recognizer
+				recognizer->boolFromGui  = window->boolToRecognizer;
+				recognizer->colorFromGui = convertToCvColor(window->colorToRecognizer);
 			}
 		}
 		window->draw();
@@ -98,14 +99,16 @@ void App::grabFrame()
 	return;
 }
 
-void App::generateColorVariables(std::map<unsigned int, nanogui::Color> &ngColors, std::map<unsigned int, cv::Scalar> &cvColors)
+std::map<unsigned int, cv::Scalar> App::convertToCvColor(std::map<unsigned int, nanogui::Color> &ngColors)
 {
+	std::map<unsigned int, cv::Scalar> cvColors;
 	for (auto &ngColor : ngColors)
 	{
 		cvColors[ngColor.first][0] = ngColor.second.r()*255;
 		cvColors[ngColor.first][1] = ngColor.second.g()*255;
 		cvColors[ngColor.first][2] = ngColor.second.b()*255;
 	}
+	return cvColors;
 }
 
 }

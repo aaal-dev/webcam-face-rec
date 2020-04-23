@@ -41,6 +41,7 @@ public:
 	void cleanup();
 	void changeViewport(int bX, int bY, int eX, int eY);
 	void setHeadModelTransformation(glm::mat4 transformation);
+	void setDrawProperties(std::map<std::string, bool> boolFromGui);
 	
 	
 private:

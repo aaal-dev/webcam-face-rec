@@ -49,7 +49,7 @@ private:
 	
 	// Functions
 	void grabFrame();
-	void generateColorVariables(std::map<unsigned int, nanogui::Color> &ngColors, std::map<unsigned int, cv::Scalar> &cvColors);
+	std::map<unsigned int, cv::Scalar> convertToCvColor(std::map<unsigned int, nanogui::Color> &ngColors);
 	
 };
 
