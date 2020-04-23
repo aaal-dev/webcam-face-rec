@@ -1,3 +1,7 @@
+### Для Ленара Айратовича
+Эксперимент с OpenCV на OpenGL.
+
+
 # webcam-face-rec
 Learning of OpenCV, dlib, OpenGL and stuff for face recognition.
 
