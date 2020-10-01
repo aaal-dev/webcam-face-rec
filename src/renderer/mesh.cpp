@@ -1,6 +1,6 @@
 #include "mesh.hpp"
 
-Mesh::Mesh(){}
+Mesh::Mesh(){indicesOffset = 0;}
 
 
 Mesh::~Mesh(){}
@@ -33,53 +33,89 @@ std::vector<Vertex> Mesh::CreateQuad(float x, float y, float z, float size, floa
 void Mesh::load_model(const char* path)
 {
 	Assimp::Importer import;
-	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+	const aiScene *scene = import.ReadFile(path, 
+		//aiProcess_JoinIdenticalVertices |
+		aiProcess_Triangulate | 
+		//aiProcess_FixInfacingNormals |
+		aiProcess_SortByPType);
 	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
 		throw;
 	}
-    for(unsigned int i = 0; i < scene->mNumMeshes; i++)
+    for(unsigned int m = 0; m < scene->mNumMeshes; m++)
 	{
-		process_mesh(scene->mMeshes[i]);
+		process_mesh(scene->mMeshes[m]);
 		
-		aiMaterial *material = scene->mMaterials[scene->mMeshes[i]->mMaterialIndex];
+		aiMaterial *material = scene->mMaterials[scene->mMeshes[m]->mMaterialIndex];
 		aiColor3D color(0.f, 0.f, 0.f);
 		material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
 		this->base_color = glm::vec3(color[0], color[1], color[2]);
 	}
 }
 
-void Mesh::process_mesh(aiMesh *mesh)
+void Mesh::load_shader(const char * vertex_file_path, const char * fragment_file_path) 
+{
+	shader = Shader(vertex_file_path, fragment_file_path);
+	shaderID = shader.getShaderID();
+}
+
+void Mesh::process_mesh(const aiMesh *mesh)
 {
 	load_vertices(mesh);
 	load_indices(mesh);
-	
+	this->indicesOffset += mesh->mNumVertices;
+}
+
+void Mesh::process_face(const aiMesh *mesh, const aiFace *face)
+{
+	load_vertices(mesh, face);
+	load_indices(face);
 	
 }
 
-void Mesh::load_vertices(const aiMesh *mesh)
+void Mesh::load_vertices(const aiMesh *mesh) 
 {
-	for(unsigned int i = 0; i < mesh->mNumVertices; i++)
+	for(unsigned int v = 0; v < mesh->mNumVertices; v++)
 	{
 		Vertex vertex;
-		glm::vec3 vector;
-		vector.x = mesh->mVertices[i].x;
-		vector.y = mesh->mVertices[i].y;
-		vector.z = mesh->mVertices[i].z;
-		vertex.Position = vector;
+		vertex.Position.x = mesh->mVertices[v].x;
+		vertex.Position.y = mesh->mVertices[v].y;
+		vertex.Position.z = mesh->mVertices[v].z;
 		
-		vector.x = mesh->mNormals[i].x;
-		vector.y = mesh->mNormals[i].y;
-		vector.z = mesh->mNormals[i].z;
-		vertex.Normal = vector;
+		vertex.Normal.x = mesh->mNormals[v].x;
+		vertex.Normal.y = mesh->mNormals[v].y;
+		vertex.Normal.z = mesh->mNormals[v].z;
 		
 		if(mesh->mTextureCoords[0]) 
 		{
-			glm::vec2 vec;
-			vec.x = mesh->mTextureCoords[0][i].x;
-			vec.y = mesh->mTextureCoords[0][i].y;
-			vertex.TexCoords = vec;
+			vertex.TexCoords.x = mesh->mTextureCoords[0][v].x;
+			vertex.TexCoords.y = mesh->mTextureCoords[0][v].y;
+		} else {
+			vertex.TexCoords = { 0.0f, 0.0f };
+		}
+		this->vertices.push_back(vertex);
+    }
+}
+
+void Mesh::load_vertices(const aiMesh *mesh, const aiFace *face)
+{
+	for(unsigned int i = 0; i < face->mNumIndices; i++)
+	{
+		Vertex vertex;
+		
+		vertex.Position.x = mesh->mVertices[i].x;
+		vertex.Position.y = mesh->mVertices[i].y;
+		vertex.Position.z = mesh->mVertices[i].z;
+		
+		vertex.Normal.x = mesh->mNormals[i].x;
+		vertex.Normal.y = mesh->mNormals[i].y;
+		vertex.Normal.z = mesh->mNormals[i].z;
+		
+		if(mesh->mTextureCoords[0]) 
+		{
+			vertex.TexCoords.x = mesh->mTextureCoords[0][i].x;
+			vertex.TexCoords.y = mesh->mTextureCoords[0][i].y;
 		} else {
 			vertex.TexCoords = { 0.0f, 0.0f };
 		}
@@ -89,12 +125,19 @@ void Mesh::load_vertices(const aiMesh *mesh)
 
 void Mesh::load_indices(const aiMesh *mesh)
 {
-	std::vector<unsigned int> indices;
-	
 	for(unsigned int i = 0; i < mesh->mNumFaces; i++)
 	{
 		aiFace face = mesh->mFaces[i];
+		if (face.mNumIndices < 3) 
+			continue;
+		assert(face.mNumIndices == 3);
 		for(unsigned int j = 0; j < face.mNumIndices; j++)
-			this->indices.push_back(face.mIndices[j]);
+			this->indices.push_back(face.mIndices[j] + indicesOffset);
 	}
+}
+
+void Mesh::load_indices(const aiFace *face)
+{
+	for(unsigned int f = 0; f < face->mNumIndices; f++)
+		this->indices.push_back(face->mIndices[f]);
 }

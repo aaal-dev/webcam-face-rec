@@ -1,6 +1,8 @@
 #ifndef RECOGNIZER_HPP
 #define RECOGNIZER_HPP
 
+#include <thread>
+
 // Inner classes
 #include "recognizer/face.hpp"
 #include "recognizer/facedetector.hpp"
@@ -44,6 +46,7 @@ public:
 	// Functions
 	static Recognizer* getInstance();
 	static void releaseInstance();
+	void startDetector();
 	void detectFaces();
 	void drawFaceShape(cv::Mat &frame, Face face, cv::Scalar color, int offset);
 	std::array<float,3> get_face_rotation();

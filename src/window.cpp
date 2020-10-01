@@ -8,6 +8,7 @@ Renderer* Window::render = nullptr;
 nanogui::Screen* Window::screen = nullptr;
 bool Window::drawActualPoints = false;
 bool Window::drawCorrectedPoints = false;
+int Window::keyPressed = NULL;
 
 Window::Window()
 {
@@ -94,7 +95,7 @@ bool Window::initializeGui()
 
 bool Window::createWindow() 
 {
-	window = glfwCreateWindow(800, 600, "Face", nullptr, nullptr);
+	window = glfwCreateWindow(width, height, "Face", nullptr, nullptr);
 	if (window)
 	{
 		glfwMakeContextCurrent(window);
@@ -225,6 +226,11 @@ void Window::updateTitle()
 }
 
 
+int Window::pressedKey()
+{
+	 return keyPressed;
+}
+
   ////////////////////////
  // Callback functions //
 ////////////////////////
@@ -232,6 +238,7 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 {
 	if (action == GLFW_PRESS)
 	{
+		keyPressed = key;
 		switch (key)
 		{
 			case GLFW_KEY_ESCAPE:

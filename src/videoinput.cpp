@@ -32,7 +32,11 @@ bool VideoInput::openCamera()
 	// Initialize OpenCV webcam capture
 	webcam = new cv::VideoCapture(0);
 	if (webcam->isOpened())
+	{
+		std::thread grabFrameThread(&VideoInput::grabFrame, this);
+		grabFrameThread.detach();
 		return true;
+	}
 	fprintf( stderr, "Unable to connect to camera.\n" );
 	//getchar();
 	return false;
@@ -45,8 +49,11 @@ bool VideoInput::isOpened()
 
 void VideoInput::grabFrame()
 {
-	*webcam >> frame;
-	hasFrame = true;
+	while (this->isOpened()) 
+	{
+		*webcam >> frame;
+		hasFrame = true;
+	}
 }
 
 cv::Mat VideoInput::getFrame()

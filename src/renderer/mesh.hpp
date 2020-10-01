@@ -32,7 +32,7 @@ public:
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 	glm::vec3 base_color;
-	Shader shader;
+	GLuint shaderID;
 	GLuint VAO;
 	GLuint VBO;
 	GLuint EBO;
@@ -45,9 +45,18 @@ public:
 	// Functions
 	std::vector<Vertex> CreateQuad(float x, float y, float z, float size, float textureID);
 	void load_model(const char* path);
-	void process_mesh(aiMesh *mesh);
+	void load_shader(const char * vertex_file_path, const char * fragment_file_path);
+	void process_mesh(const aiMesh *mesh);
+	void process_face(const aiMesh *mesh, const aiFace *face);
 	void load_vertices(const aiMesh *mesh);
+	void load_vertices(const aiMesh *mesh, const aiFace *face);
 	void load_indices(const aiMesh *mesh);
+	void load_indices(const aiFace *face);
+	
+private:
+	Shader shader;
+	GLuint indicesOffset;
+	
 };
 
 #endif // MESH_HPP

@@ -66,8 +66,8 @@ Mesh Renderer::setWebcamMesh()
 {
 	Mesh webcam;
 	webcam.name = "webcam";
-	webcam.shader = Shader( "../../../data/shader.glsl.vertex", "../../../data/shader.glsl.fragment" );
-	int loc = glGetUniformLocation(webcam.shader.getShaderID(), "u_tex");
+	webcam.load_shader( "../../../data/shader.glsl.vertex", "../../../data/shader.glsl.fragment" );
+	int loc = glGetUniformLocation(webcam.shaderID, "u_tex");
 	int samplers[2] = { 0, 1 };
 	glUniform1iv(loc, 2, samplers);
 	
@@ -113,21 +113,21 @@ Mesh Renderer::setHeadModelMesh()
 {
 	Mesh headModel;
 	headModel.name = "head";
-	//headModel.load_model("../../../data/model/cartoon/head.obj");
-	headModel.load_model("../../../data/model/female/female2.obj");
-	headModel.shader = Shader( "../../../data/shader2.glsl.vertex", "../../../data/shader2.glsl.fragment" );
+	headModel.load_model("../../../data/model/cartoon/head.obj");
+	//headModel.load_model("../../../data/model/female/female.obj");
+	headModel.load_shader( "../../../data/shader2.glsl.vertex", "../../../data/shader2.glsl.fragment" );
 	
-	glUseProgram(headModel.shader.getShaderID());
+	glUseProgram(headModel.shaderID);
 	
-	GLuint l_positionMatrixID = glGetUniformLocation(headModel.shader.getShaderID(), "l_position");
+	GLuint l_positionMatrixID = glGetUniformLocation(headModel.shaderID, "l_position");
 	glm::vec3 l_position = glm::vec3(10.0f, 15.0f, 10.0f);
 	glUniform3fv(l_positionMatrixID, 1, &l_position[0]);
 	
-	GLuint l_colorMatrixID = glGetUniformLocation(headModel.shader.getShaderID(), "l_color");
+	GLuint l_colorMatrixID = glGetUniformLocation(headModel.shaderID, "l_color");
 	glm::vec3 l_color = glm::vec3(1.0f, 1.0f, 1.0f);
 	glUniform3fv(l_colorMatrixID, 1, &l_color[0]);
 	
-	GLuint colorMatrixID = glGetUniformLocation(headModel.shader.getShaderID(), "color");
+	GLuint colorMatrixID = glGetUniformLocation(headModel.shaderID, "color");
 	glm::vec3 m_color = headModel.base_color;
 	glUniform3fv(colorMatrixID, 1, &m_color[0]);
 	
@@ -175,19 +175,19 @@ void Renderer::draw()
 	{
 		if (mesh.isDrawing)
 		{
-			glUseProgram(mesh.shader.getShaderID());
+			glUseProgram(mesh.shaderID);
 			
 			float aspect_ratio = (float)_width / (float)_height;
 			
-			GLuint modelMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "model");
+			GLuint modelMatrixID = glGetUniformLocation(mesh.shaderID, "model");
 			glm::mat4 mesh_transform = mesh.normalization * mesh.transformation;
 			glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, &mesh_transform[0][0]);
 			
-			GLuint viewMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "view");
+			GLuint viewMatrixID = glGetUniformLocation(mesh.shaderID, "view");
 			glm::mat4 view = glm::lookAt(glm::vec3(15.0, 5.0, 0.0), glm::vec3(0.0, 5.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
 			glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, &view[0][0]);
 			
-			GLuint projectionMatrixID = glGetUniformLocation(mesh.shader.getShaderID(), "projection");
+			GLuint projectionMatrixID = glGetUniformLocation(mesh.shaderID, "projection");
 			glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect_ratio, 0.5f, 100.0f);
 			glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projection[0][0]);
 			
@@ -211,7 +211,7 @@ void Renderer::cleanup()
 		glDeleteBuffers(1, &mesh.VBO);
 		glDeleteBuffers(1, &mesh.EBO);
 		glDeleteVertexArrays(1, &mesh.VAO);
-		glDeleteProgram(mesh.shader.getShaderID());
+		glDeleteProgram(mesh.shaderID);
 	}
 
 }

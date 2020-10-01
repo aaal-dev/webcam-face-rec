@@ -1,6 +1,8 @@
 #ifndef VIDEOINPUT_HPP
 #define VIDEOINPUT_HPP
 
+#include <thread>
+
 //OpenCV
 #include <opencv2/videoio.hpp>
 

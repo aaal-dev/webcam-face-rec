@@ -1,8 +1,6 @@
 #ifndef APP_H
 #define APP_H
 
-#include <thread>
-
 // Live2D
 
 
@@ -32,15 +30,27 @@ public:
 	static void releaseInstance();
 	bool initialize();
 	bool run();
+	bool stop();
 	
 	
 private:
 	App();
 	~App();
 	
+	// Enums
+	enum StatesId {
+		SPLASH_SCREEN,
+		MAIN_MENU,
+		OPTIONS_MENU,
+		CREDITS,
+		FULL_FRAME,
+		NUM_STATES
+	};
 	
 	// Variables
 	static App* instance;
+	StatesId _state;
+	
 	static bool useWebcam;
 	static Window* window;
 	static VideoInput* camera;

@@ -36,6 +36,12 @@ void Recognizer::releaseInstance()
 	instance = nullptr;
 }
 
+void Recognizer::startDetector()
+{
+	std::thread detectFacesThread(&Recognizer::detectFaces, this);
+	detectFacesThread.detach();
+}
+
 void Recognizer::detectFaces()
 {
 	// Normalize frame

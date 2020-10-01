@@ -13,6 +13,16 @@ namespace app
 class Window
 {
 public:
+	// Variables
+	char* title;
+	static Renderer* render;
+	std::map<unsigned int, bool> boolToRecognizer;
+	std::map<std::string, bool> boolToRenderer;
+	std::map<unsigned int, nanogui::Color> colorToRecognizer;
+	
+	int width;
+	int height;
+	
 	// Functions
 	static Window* getInstance();
 	static void releaseInstance();
@@ -29,16 +39,27 @@ public:
 	void draw();
 	void cleanup();
 	
-	// Variables
-	char* title;
-	static Renderer* render;
-	std::map<unsigned int, bool> boolToRecognizer;
-	std::map<std::string, bool> boolToRenderer;
-	std::map<unsigned int, nanogui::Color> colorToRecognizer;
+	static int pressedKey();
 	
 private:
 	Window();
 	~Window();
+	
+	
+	// Variables
+	static Window* instance;
+	GLFWwindow* window;
+	static bool drawActualPoints;
+	static bool drawCorrectedPoints;
+	static int keyPressed;
+	
+	double startTime;
+	double numberOfTicks;
+	float speed;
+	
+	static nanogui::Screen* screen;
+	nanogui::FormHelper* gui;
+	
 	
 	// Functions
 	void startTimer();
@@ -52,20 +73,7 @@ private:
 	static void drop_callback(GLFWwindow* window, int count, const char **filenames);
 	static void scroll_callback(GLFWwindow* window, double x, double y);
 	
-	// Variables
-	static Window* instance;
-	GLFWwindow* window;
-	static bool drawActualPoints;
-	static bool drawCorrectedPoints;
 	
-	int width;
-	int height;
-	double startTime;
-	double numberOfTicks;
-	float speed;
-	
-	static nanogui::Screen* screen;
-	nanogui::FormHelper* gui;
 	
 	
 };
