@@ -5,15 +5,22 @@
 #include <map>
 
 // Inner classes
+#include "logger.hpp"
 #include "renderer.hpp"
 
-namespace app
-{
+namespace app {
 
-class Window
-{
+class Window {
+	
 public:
+	Window();
+	Window(int width, int height);
+	~Window();
+	
+	
 	// Variables
+	static Logger* logger;
+	
 	char* title;
 	static Renderer* render;
 	std::map<unsigned int, bool> boolToRecognizer;
@@ -24,12 +31,13 @@ public:
 	int height;
 	
 	// Functions
-	static Window* getInstance();
-	static void releaseInstance();
-	bool initialize();
+	void initialize();
+	
+	bool create_window();
+	
 	bool initializeGL();
 	bool initializeGui();
-	bool createWindow();
+	
 	bool isClosingWindows();
 	void configureWindow();
 	void updateWindow();
@@ -39,25 +47,18 @@ public:
 	void draw();
 	void cleanup();
 	
-	static int pressedKey();
+	
 	
 private:
-	Window();
-	~Window();
-	
 	
 	// Variables
-	static Window* instance;
 	GLFWwindow* window;
-	static bool drawActualPoints;
-	static bool drawCorrectedPoints;
-	static int keyPressed;
 	
 	double startTime;
 	double numberOfTicks;
 	float speed;
 	
-	static nanogui::Screen* screen;
+	//nanogui::Screen* screen;
 	nanogui::FormHelper* gui;
 	
 	
@@ -65,6 +66,8 @@ private:
 	void startTimer();
 	float getSpeedOnMS();
 	
+	// Callback functions
+	static void glfw_error_callback(int error, const char* description);
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 	static void cursor_position_callback(GLFWwindow* window, double x, double y);
@@ -72,8 +75,6 @@ private:
 	static void character_callback(GLFWwindow* window, unsigned int codepoint);
 	static void drop_callback(GLFWwindow* window, int count, const char **filenames);
 	static void scroll_callback(GLFWwindow* window, double x, double y);
-	
-	
 	
 	
 };

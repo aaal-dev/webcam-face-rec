@@ -1,9 +1,8 @@
 #include "app.hpp"
-int main() 
-{
-	if (app::App::getInstance()->initialize() == GL_FALSE)
+int main() {
+	if (app::App::get_instance()->initialize() == GL_FALSE)
 		return 1;
-	app::App::getInstance()->run();
-	app::App::getInstance()->stop();
+	app::App::get_instance()->run();
+	app::App::get_instance()->stop();
 	return 0;
 }
