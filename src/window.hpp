@@ -1,68 +1,69 @@
 #ifndef WINDOW_HPP
 #define WINDOW_HPP
 
-//#include <stdio.h>
 #include <map>
+
+// GLFW
+#include <GLFW/glfw3.h>
 
 // Inner classes
 #include "logger.hpp"
-#include "renderer.hpp"
 
 namespace app {
 
 class Window {
 	
 public:
-	Window();
-	Window(int width, int height);
-	~Window();
+	
 	
 	
 	// Variables
 	static Logger* logger;
 	
 	char* title;
-	static Renderer* render;
-	std::map<unsigned int, bool> boolToRecognizer;
-	std::map<std::string, bool> boolToRenderer;
-	std::map<unsigned int, nanogui::Color> colorToRecognizer;
+	//std::map<unsigned int, bool> boolToRecognizer;
+	//std::map<std::string, bool> boolToRenderer;
+	//std::map<unsigned int, nanogui::Color> colorToRecognizer;
 	
 	int width;
 	int height;
 	
 	// Functions
-	void initialize();
+	static Window* get_instance();
 	
-	bool create_window();
+	bool initialize();
+	GLFWwindow* create_window();
 	
-	bool initializeGL();
-	bool initializeGui();
 	
-	bool isClosingWindows();
-	void configureWindow();
+	void configure_window(GLFWwindow* window);
+	bool is_closing_window(GLFWwindow* window);
 	void updateWindow();
 	void terminateWindow();
 	void configureGui();
 	void updateTitle();
-	void draw();
+	void draw(GLFWwindow* window);
 	void cleanup();
 	
 	
 	
 private:
+	Window();
+	~Window();
+	
 	
 	// Variables
-	GLFWwindow* window;
+	static Window* instance;
 	
 	double startTime;
 	double numberOfTicks;
 	float speed;
 	
 	//nanogui::Screen* screen;
-	nanogui::FormHelper* gui;
+	//nanogui::FormHelper* gui;
 	
 	
 	// Functions
+	static void release_instance();
 	void startTimer();
 	float getSpeedOnMS();
 	

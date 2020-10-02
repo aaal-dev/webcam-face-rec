@@ -4,6 +4,8 @@ namespace app
 {
 
 Renderer* Renderer::instance = nullptr;
+Logger* Renderer::logger = nullptr;
+
 Shader* Renderer::shader = nullptr;
 GLuint* Renderer::VAO = nullptr;
 GLuint* Renderer::VBO = nullptr;
@@ -21,45 +23,46 @@ Renderer::Renderer()
 
 Renderer::~Renderer(){}
 
-Renderer* Renderer::getInstance() 
+Renderer* Renderer::get_instance() 
 {
 	if (instance == nullptr)
 		instance = new Renderer();
 	return instance;
 }
 
-void Renderer::releaseInstance()
+void Renderer::release_instance()
 {
 	if (instance != nullptr)
 		delete instance;
 	instance = nullptr;
 }
 
-bool Renderer::initialize(GLADloadproc glfwProcAddress)
+bool Renderer::initialize_GL(GLADloadproc glfwProcAddress)
 {
-	if (gladLoadGLLoader(glfwProcAddress))
+	if (!gladLoadGLLoader(glfwProcAddress))
 	{
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
-		glEnable(GL_CULL_FACE);
-		
-		// Create and compile our GLSL program from the shaders
-		Mesh webcam = setWebcamMesh();
-		meshes.push_back(webcam);
-		
-		Mesh headModel = setHeadModelMesh();
-		glm::mat4 normalization(1.0);
-		normalization = glm::scale(normalization, glm::vec3(1.2, 1.2, 1.2));
-		normalization = glm::translate(normalization, glm::vec3(0, 5.0, 0));
-		normalization = glm::rotate(normalization, 1.55f, glm::vec3(0.0f, 1.0f, 0.0f));
-		headModel.normalization = normalization;
-		meshes.push_back(headModel);
-		
-		return true;
+		fprintf( stderr, "Failed to initialize OpenGL context.\n" );
+		return false;
 	}
-	fprintf( stderr, "Failed to initialize OpenGL context.\n" );
-	//getchar();
-	return false;
+	
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glEnable(GL_CULL_FACE);
+	glViewport(0, 0, width, height);
+	
+	// Create and compile our GLSL program from the shaders
+	Mesh webcam = setWebcamMesh();
+	meshes.push_back(webcam);
+	
+	Mesh headModel = setHeadModelMesh();
+	glm::mat4 normalization(1.0);
+	normalization = glm::scale(normalization, glm::vec3(1.2, 1.2, 1.2));
+	normalization = glm::translate(normalization, glm::vec3(0, 5.0, 0));
+	normalization = glm::rotate(normalization, 1.55f, glm::vec3(0.0f, 1.0f, 0.0f));
+	headModel.normalization = normalization;
+	meshes.push_back(headModel);
+	
+	return true;
 }
 
 Mesh Renderer::setWebcamMesh()

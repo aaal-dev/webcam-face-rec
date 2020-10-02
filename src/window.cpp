@@ -2,38 +2,42 @@
 
 namespace app {
 
-Logger*   Window::logger = nullptr;
-Renderer* Window::render = nullptr;
+Window* Window::instance = nullptr;
+Logger* Window::logger = nullptr;
 
 Window::Window() {
 	title = (char* )"Demo App";
 	
-	boolToRenderer = {{"webcam", false}, 
-					  {"head", false}};
-	colorToRecognizer = {{0, nanogui::Color(1.0f, 0.0f, 0.0f, 1.f)},
-						 {1, nanogui::Color(0.0f, 0.0f, 1.0f, 1.f)},
-						 {2, nanogui::Color(1.0f, 0.0f, 1.0f, 1.f)},
-						 {3, nanogui::Color(0.0f, 1.0f, 0.0f, 1.f)},
-						 {4, nanogui::Color(1.0f, 1.0f, 0.0f, 1.f)},
-						 {5, nanogui::Color(0.0f, 1.0f, 1.0f, 1.f)}};
-	initialize();
-}
-
-Window::Window(int width, int height) {
-	this->title = (char* )"Demo App";
-	this->width = width;
-	this->height = height;
-	
-	
-	
-	initialize();
+	//boolToRenderer = {{"webcam", false}, 
+	//				  {"head", false}};
+	//colorToRecognizer = {{0, nanogui::Color(1.0f, 0.0f, 0.0f, 1.f)},
+	//					 {1, nanogui::Color(0.0f, 0.0f, 1.0f, 1.f)},
+	//					 {2, nanogui::Color(1.0f, 0.0f, 1.0f, 1.f)},
+	//					 {3, nanogui::Color(0.0f, 1.0f, 0.0f, 1.f)},
+	//					 {4, nanogui::Color(1.0f, 1.0f, 0.0f, 1.f)},
+	//					 {5, nanogui::Color(0.0f, 1.0f, 1.0f, 1.f)}};
 }
 
 Window::~Window() {}
 
-void Window::initialize() {
-	if(!glfwInit()) 	// Initialize GLFW
+Window* Window::get_instance() {
+	if (instance == nullptr)
+		instance = new Window();
+	return instance;
+}
+
+void Window::release_instance() {
+	if (instance != nullptr)
+		delete instance;
+	instance = nullptr;
+}
+
+bool Window::initialize() {
+	if(!glfwInit()) {	// Initialize GLFW
 		logger->gl_log_err("Failed to initialize GLFW\n");
+		return false;
+	}
+	logger->gl_log ("initialize GLFW\n%s\n", glfwGetVersionString());
 	
 	// Set the required options for GLFW
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -51,41 +55,30 @@ void Window::initialize() {
 	glfwWindowHint(GLFW_DEPTH_BITS, 24);
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 	
+	glfwSetErrorCallback(glfw_error_callback);
+	glfwSwapInterval(1);
+	
 	startTimer();
+	return true;
 }
 
-bool Window::initializeGL() {
-	return render->initialize((GLADloadproc)glfwGetProcAddress);
-}
-
-bool Window::initializeGui() {
-	//screen = new nanogui::Screen();
-	//if (screen) {
-	//	screen->initialize(window, true);
-		return true;
-	//}
-	//fprintf( stderr, "Failed to initialize screen for nanogui. \n" );
-	//getchar();
-	//return false;
-}
-
-bool Window::create_window() {
-	window = glfwCreateWindow(width, height, "Face", nullptr, nullptr);
+GLFWwindow* Window::create_window() {
+	GLFWwindow* window = glfwCreateWindow(width, height, "Face", nullptr, nullptr);
 	if (!window) {
 		logger->gl_log_err("Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n" );
 		glfwTerminate();
-		return false;
+		return nullptr;
 	}
 	glfwMakeContextCurrent(window);
-	return true;
+	logger->gl_log("Open mian window");
+	return window;
 }
 
 void Window::updateWindow() {
 	updateTitle();
 }
 
-void Window::configureWindow() {
-	glfwSetErrorCallback(Window::glfw_error_callback);
+void Window::configure_window(GLFWwindow* window) {
 	glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetKeyCallback(window, key_callback);
@@ -94,13 +87,10 @@ void Window::configureWindow() {
     glfwSetScrollCallback(window, scroll_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwGetFramebufferSize(window, &width, &height);
-	glViewport(0, 0, width, height);
-	glEnable(GL_CULL_FACE);
-	glfwSwapInterval(1);
 	glfwSwapBuffers(window);
 }
 
-bool Window::isClosingWindows() {
+bool Window::is_closing_window(GLFWwindow* window) {
 	return glfwWindowShouldClose(window);
 }
 
@@ -109,50 +99,15 @@ void Window::terminateWindow() {
 }
 
 
-
-void Window::configureGui() {
-	//gui = new nanogui::FormHelper(screen);
-	//nanogui::ref<nanogui::Window> nanoguiWindow = 
-	//gui->addWindow(Eigen::Vector2i(10, 10), "Settings");
-	
-	//gui->addGroup("Use frame");
-	
-	//gui->addVariable("Full-sized BGR", boolToRecognizer[0]);
-	//gui->addVariable("Color", colorToRecognizer[0]);
-	
-	//gui->addVariable("Half-sized BGR", boolToRecognizer[1]);
-	//gui->addVariable("Color", colorToRecognizer[1]);
-	
-	//gui->addVariable("Blured half-sized BGR", boolToRecognizer[2]);
-	//gui->addVariable("Color", colorToRecognizer[2]);
-	
-	//gui->addVariable("Full-sized gray", boolToRecognizer[3]);
-	//gui->addVariable("Color", colorToRecognizer[3]);
-	
-	//gui->addVariable("Half-sized gray", boolToRecognizer[4]);
-	//gui->addVariable("Color", colorToRecognizer[4]);
-	
-	//gui->addVariable("Blured half-sized gray", boolToRecognizer[5]);
-	//gui->addVariable("Color", colorToRecognizer[5]);
-	
-	//gui->addGroup("Meshes");
-	
-	//gui->addVariable("Webcam", boolToRenderer.at("webcam"));
-	//gui->addVariable("Face model", boolToRenderer.at("head"));
-	
-	//screen->setVisible(true);
-	//screen->performLayout();
-}
-
-void Window::draw() {
+void Window::draw(GLFWwindow* window) {
 	// Check if any events have been activated (key pressed, mouse moved etc.) and call corresponding response functions
 //	glm::mat4 rotation_matrix(1.0);
 //	rotation_matrix = glm::rotate(rotation_matrix,  face_rotation[0], glm::vec3(1.0f, 0.0f, 0.0f));  // forward-back
 //	rotation_matrix = glm::rotate(rotation_matrix, -face_rotation[1], glm::vec3(0.0f, 1.0f, 0.0f));  // x-rotation
 //	rotation_matrix = glm::rotate(rotation_matrix, -face_rotation[2], glm::vec3(0.0f, 0.0f, 1.0f));  // tilt
 //	render->setHeadModelTransformation(rotation_matrix);
-	render->setDrawProperties(boolToRenderer);
-	render->draw();
+	//render->setDrawProperties(boolToRenderer);
+	//render->draw();
 	//screen->drawContents();
 	//screen->drawWidgets();
 	glfwSwapBuffers(window);
@@ -160,7 +115,7 @@ void Window::draw() {
 }
 
 void Window::cleanup() {
-	render->cleanup();
+	//render->cleanup();
 }
 
 
@@ -216,7 +171,7 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	(void)window;
 	//screen->resizeCallbackEvent(width, height);
-	render->changeViewport(0,0, width, height);
+	//render->changeViewport(0,0, width, height);
 }
 
 void Window::cursor_position_callback(GLFWwindow* window, double x, double y) {

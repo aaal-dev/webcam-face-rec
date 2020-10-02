@@ -4,6 +4,9 @@ namespace app {
 
 App* App::instance = nullptr;
 Logger* App::logger = nullptr;
+Window* App::windower = nullptr;
+Renderer* App::render = nullptr;
+Gui* App::guier = nullptr;
 
 App::App() {}
 App::~App() {}
@@ -21,20 +24,29 @@ void App::release_instance() {
 }
 
 bool App::initialize() {
-	logger = Logger::getInstance();
+	logger = Logger::get_instance();
 	logger->restart_gl_log();
 	logger->gl_log("initialize appication\n");
 	
-	useWebcam = false;
+	//useWebcam = false;
 	
-	mainWindow = new Window(800, 600);
-	mainWindow->logger = logger;
-
-	if (!mainWindow->create_window())
+	windower = Window::get_instance();
+	windower->width = 800;
+	windower->height = 600;
+	windower->logger = logger;
+	if (!windower->initialize())
 		return false;
-	if (!mainWindow->initializeGL())
+		
+	
+	
+	render = Renderer::get_instance();
+	render->logger = logger;
+	if (!render->initialize_GL((GLADloadproc)glfwGetProcAddress))
 		return false;
-	if (!mainWindow->initializeGui())
+	
+	guier = Gui::get_instance();
+	guier->logger = logger;
+	if (!guier->initialize_gui())
 		return false;
 	
 	return true;
@@ -43,73 +55,75 @@ bool App::initialize() {
 bool App::run() {
 	logger->gl_log("run appication");
 	
-	mainWindow->configureWindow();
-	mainWindow->configureGui();
+	mainWindow = windower->create_window();
+	
+	windower->configure_window(mainWindow);
+	guier->configure_gui();
 	//useWebcam = camera->openCamera();
 	
-	while (!mainWindow->isClosingWindows()) {
+	while (!windower->is_closing_window(mainWindow)) {
 		
 		switch (state) {
 			case SPLASH_SCREEN: 
 				break;
 			case MAIN_MENU:
-				if (useWebcam) {
-					recognizer->boolFromGui  = mainWindow->boolToRecognizer;
-					recognizer->colorFromGui = convert_to_cvColor(mainWindow->colorToRecognizer);
+/*				if (useWebcam) {
+					recognizer->boolFromGui  = windower->boolToRecognizer;
+					recognizer->colorFromGui = convert_to_cvColor(windower->colorToRecognizer);
 					if (camera->isFrameGrabed())
 						recognizer->frame = camera->getFrame();
-					mainWindow->render->_data    = recognizer->frameRGB.data;
+					windower->render->_data    = recognizer->frameRGB.data;
 					std::array<float,3> face_rotation = recognizer->get_face_rotation();
 					glm::mat4 rotation_matrix(1.0);
 					rotation_matrix = glm::rotate(rotation_matrix,  face_rotation[0], glm::vec3(1.0f, 0.0f, 0.0f));  // forward-back
 					rotation_matrix = glm::rotate(rotation_matrix, -face_rotation[1], glm::vec3(0.0f, 1.0f, 0.0f));  // x-rotation
 					rotation_matrix = glm::rotate(rotation_matrix, -face_rotation[2], glm::vec3(0.0f, 0.0f, 1.0f));  // tilt
-					mainWindow->render->setHeadModelTransformation(rotation_matrix);
-				}
+					windower->render->setHeadModelTransformation(rotation_matrix);
+				}*/
 				
-				mainWindow->render->_width   = recognizer->frameRGB.cols;
-				mainWindow->render->_height  = recognizer->frameRGB.rows;
+				//windower->render->_width   = recognizer->frameRGB.cols;
+				//windower->render->_height  = recognizer->frameRGB.rows;
 				
-				mainWindow->draw();
+				windower->draw(mainWindow);
 				break;
 			case OPTIONS_MENU:
 				break;
 			case CREDITS:
 				break;
 			case FULL_FRAME:
-				if (useWebcam) {
-					recognizer->boolFromGui  = mainWindow->boolToRecognizer;
-					recognizer->colorFromGui = convert_to_cvColor(mainWindow->colorToRecognizer);
+/*				if (useWebcam) {
+					recognizer->boolFromGui  = windower->boolToRecognizer;
+					recognizer->colorFromGui = convert_to_cvColor(windower->colorToRecognizer);
 					if (camera->isFrameGrabed())
 						recognizer->frame = camera->getFrame();
-					mainWindow->render->_data    = recognizer->frameRGB.data;
+					windower->render->_data    = recognizer->frameRGB.data;
 					std::array<float,3> face_rotation = recognizer->get_face_rotation();
 					glm::mat4 rotation_matrix(1.0);
 					rotation_matrix = glm::rotate(rotation_matrix,  face_rotation[0], glm::vec3(1.0f, 0.0f, 0.0f));  // forward-back
 					rotation_matrix = glm::rotate(rotation_matrix, -face_rotation[1], glm::vec3(0.0f, 1.0f, 0.0f));  // x-rotation
 					rotation_matrix = glm::rotate(rotation_matrix, -face_rotation[2], glm::vec3(0.0f, 0.0f, 1.0f));  // tilt
-					mainWindow->render->setHeadModelTransformation(rotation_matrix);
-				}
+					windower->render->setHeadModelTransformation(rotation_matrix);
+				}*/
 				
-				mainWindow->render->_width   = mainWindow->width;
-				mainWindow->render->_height  = mainWindow->height;
-				mainWindow->draw();
+				//windower->render->_width   = windower->width;
+				//windower->render->_height  = windower->height;
+				windower->draw(mainWindow);
 				break;
 			default:
 				break;
 		}
 		
-		mainWindow->updateWindow();
+		windower->updateWindow();
 	}
 	
-	mainWindow->cleanup();
+	windower->cleanup();
 	
 	// Release OpenCV webcam capture
-	camera->releaseCamera();
-	camera->releaseInstance();
+	//camera->releaseCamera();
+	//camera->releaseInstance();
 	
 	// Terminates GLFW, clearing any resources allocated by GLFW.
-	mainWindow->terminateWindow();
+	windower->terminateWindow();
 	//window->releaseInstance();
 	
 	return true;
@@ -119,7 +133,7 @@ void App::stop() {
 	instance->release_instance();
 }
 
-std::map<unsigned int, cv::Scalar> App::convert_to_cvColor(std::map<unsigned int, nanogui::Color> &ngColors) {
+/*std::map<unsigned int, cv::Scalar> App::convert_to_cvColor(std::map<unsigned int, nanogui::Color> &ngColors) {
 	std::map<unsigned int, cv::Scalar> cvColors;
 	for (auto &ngColor : ngColors) {
 		cvColors[ngColor.first][0] = ngColor.second.r()*255;
@@ -127,7 +141,7 @@ std::map<unsigned int, cv::Scalar> App::convert_to_cvColor(std::map<unsigned int
 		cvColors[ngColor.first][2] = ngColor.second.b()*255;
 	}
 	return cvColors;
-}
+}*/
 
 }
 

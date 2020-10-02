@@ -1,10 +1,9 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
 
-#include <cstdio>
-
 #include <time.h>
 #include <stdarg.h>
+#include <cstdio>
 
 #define GL_LOG_FILE "gl.log"
 
@@ -18,8 +17,8 @@ public:
 	
 	
 	// Functions
-	static Logger* getInstance();
-	static void releaseInstance();
+	static Logger* get_instance();
+	
 	
 	bool restart_gl_log();
 	bool gl_log(const char* message, ...);
@@ -29,6 +28,19 @@ public:
 private:
 	Logger();
 	~Logger();
+	
+	
+	
+	// Variables
+	
+	
+	
+	// Functions
+	static void release_instance();
+	
+	
+	
+	
 };
 
 }

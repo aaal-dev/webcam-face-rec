@@ -5,17 +5,20 @@
 
 
 // OpenCV
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+//#include <opencv2/highgui.hpp>
+//#include <opencv2/imgproc.hpp>
 
 // CMUSphinx
 //#include <pocketsphinx/pocketsphinx.h>
 
 // Inner classes
-#include "logger.hpp"
+#include "renderer.hpp"
 #include "window.hpp"
-#include "recognizer.hpp"
-#include "videoinput.hpp"
+#include "gui.hpp"
+
+#include "logger.hpp"
+//#include "recognizer.hpp"
+//#include "videoinput.hpp"
 
 
 namespace app {
@@ -52,19 +55,24 @@ private:
 	// Variables
 	static App* instance;
 	static Logger* logger;
+	static Window* windower;
+	static Renderer* render;
+	static Gui* guier;
+	
+	GLFWwindow* mainWindow;
 	
 	
 	StatesId state;
 	
-	bool useWebcam;
-	Window* mainWindow;
-	VideoInput* camera;
-	Recognizer* recognizer;
+	//bool useWebcam;
+	
+	//VideoInput* camera;
+	//Recognizer* recognizer;
 	
 	
 	// Functions
 	static void release_instance();
-	std::map<unsigned int, cv::Scalar> convert_to_cvColor(std::map<unsigned int, nanogui::Color> &ngColors);
+	//std::map<unsigned int, cv::Scalar> convert_to_cvColor(std::map<unsigned int, nanogui::Color> &ngColors);
 	
 	
 };

@@ -4,21 +4,16 @@ namespace app {
 
 Logger* Logger::instance = nullptr;
 
-Logger::Logger()
-{
-}
+Logger::Logger() {}
+Logger::~Logger() {}
 
-Logger::~Logger()
-{
-}
-
-Logger* Logger::getInstance() {
+Logger* Logger::get_instance() {
 	if (instance == nullptr)
 		instance = new Logger();
 	return instance;
 }
 
-void Logger::releaseInstance() {
+void Logger::release_instance() {
 	if (instance != nullptr)
 		delete instance;
 	instance = nullptr;

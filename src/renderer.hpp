@@ -1,8 +1,10 @@
 #ifndef OPENGL_HPP
 #define OPENGL_HPP
 
+
 #include <vector>
 #include <cstring>
+#include <map>
 
 // GLAD
 #include "glad/glad.h"
@@ -10,13 +12,8 @@
 // GLM
 #include <glm/gtc/matrix_transform.hpp>
 
-// GLFW
-#include <GLFW/glfw3.h>
-
-// NanoGUI
-#include <nanogui/nanogui.h>
-
 // Inner classes
+#include "logger.hpp"
 #include "renderer/mesh.hpp"
 #include "renderer/shader.hpp"
 
@@ -28,15 +25,17 @@ class Renderer
 public:
 	
 	// Variables
+	static Logger* logger;
+	
 	static GLsizei _width;
 	static GLsizei _height;
 	static GLboolean* _data;
 	
 	
 	// Functions
-	static Renderer* getInstance();
-	static void releaseInstance();
-	bool initialize(GLADloadproc glfwProcAddress);
+	static Renderer* get_instance();
+	
+	bool initialize_GL(GLADloadproc glfwProcAddress);
 	void draw();
 	void cleanup();
 	void changeViewport(int bX, int bY, int eX, int eY);
@@ -51,6 +50,7 @@ private:
 	
 	// Variables
 	static Renderer* instance;
+	
 	static Shader* shader;
 	
 	std::vector<Mesh> meshes;
@@ -63,6 +63,8 @@ private:
 	
 	
 	// Functions
+	static void release_instance();
+	
 	Mesh setWebcamMesh();
 	Mesh setHeadModelMesh();
 	
