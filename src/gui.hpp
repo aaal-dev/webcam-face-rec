@@ -1,43 +1,67 @@
 #ifndef GUI_HPP
 #define GUI_HPP
 
+// GLAD
+#include <glad/glad.h>
+
 // NanoVG
 #include "gui/nanovg.h"
-#include "gui/nanovg_gl.h"
+#define NANOVG_GL3_IMPLEMENTATION
 
 // Inner classes
-#include "logger.hpp"
+#include "log.hpp"
+#include "statecon.hpp"
 
 namespace app {
 
 class Gui {
 public:
-	
-	// Variables
-	static Logger* logger;
-	
-	
-	
-	// Functions
-	static Gui* get_instance();
-	bool initialize_gui();
-	void configure_gui();
-	
-	
-private:
 	Gui();
 	~Gui();
 	
+	// Enums
+	enum SidesId {
+		LEFT_SIDE,
+		RIGHT_SIDE,
+		TOP_SIDE,
+		BOTTOM_SIDE,
+		NUM_SIDES
+	};
 	
 	// Variables
-	static Gui* instance;
-	
+	int width;
+	int height;
 	
 	
 	// Functions
-	static void release_instance();
+	bool initialize_gui();
+	void configure_gui();
+	bool draw_button(NVGcontext* vg, int preicon, const char* text, float pos_x, float pos_y, float width, float height, NVGcolor colour);
+	bool draw_button_centered(NVGcontext* vg, int preicon, const char* text, float pos_y, float width, float height, NVGcolor colour); 
+	void draw_plane(NVGcontext* vg, float pos_x, float pos_y, float width, float height, NVGcolor colour);
+	void drawMainMenu();
+	void drawOptionMenu();
+	void drawCreditsMenu();
+	void drawSideMenu();
+	void cleanup();
 	
-
+	
+	
+private:
+	// Variables
+	static Log* logger;
+	static StateCon* stater;
+	NVGcontext* vg;
+	bool sideMenu_hovered;
+	bool sideMenu_focused;
+	float sideMenu_time;
+	
+	// Functions
+	int isBlack(NVGcolor col);
+	char* cpToUTF8(int cp, char* str);
+	
+	
+	
 };
 
 }

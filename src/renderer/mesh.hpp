@@ -4,14 +4,16 @@
 // GLM
 #include <glm/glm.hpp>
 
-
 // AssImp
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
 // Inner classes
+#include "../log.hpp"
 #include "shader.hpp" 
+
+namespace app {
 
 struct Vertex
 {
@@ -36,6 +38,7 @@ public:
 	GLuint VAO;
 	GLuint VBO;
 	GLuint EBO;
+	GLuint texture;
 	bool isDrawing;
 	
 	glm::mat4 normalization = glm::mat4(1.0);
@@ -45,7 +48,7 @@ public:
 	// Functions
 	std::vector<Vertex> CreateQuad(float x, float y, float z, float size, float textureID);
 	void load_model(const char* path);
-	void load_shader(const char * vertex_file_path, const char * fragment_file_path);
+	bool load_shader(const char * vertex_file_path, const char * fragment_file_path);
 	void process_mesh(const aiMesh *mesh);
 	void process_face(const aiMesh *mesh, const aiFace *face);
 	void load_vertices(const aiMesh *mesh);
@@ -54,9 +57,13 @@ public:
 	void load_indices(const aiFace *face);
 	
 private:
+	// Variables
+	static Log* logger;
 	Shader shader;
 	GLuint indicesOffset;
 	
 };
+
+}
 
 #endif // MESH_HPP

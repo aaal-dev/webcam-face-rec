@@ -12,13 +12,14 @@
 //#include <pocketsphinx/pocketsphinx.h>
 
 // Inner classes
-#include "renderer.hpp"
+#include "log.hpp"
+#include "statecon.hpp"
+
+#include "render.hpp"
 #include "window.hpp"
 #include "gui.hpp"
-
-#include "logger.hpp"
 //#include "recognizer.hpp"
-//#include "videoinput.hpp"
+#include "videoinput.hpp"
 
 
 namespace app {
@@ -30,48 +31,33 @@ public:
 	
 	
 	// Functions
-	static App* get_instance();
-	bool initialize();
-	bool run();
-	void stop();
+	static App* getApp ();
+	bool initialize ();
+	bool run ();
+	void stop ();
 	
 	
 private:
-	App();
-	~App();
-	
-	
-	// Enums
-	enum StatesId {
-		SPLASH_SCREEN,
-		MAIN_MENU,
-		OPTIONS_MENU,
-		CREDITS,
-		FULL_FRAME,
-		NUM_STATES
-	};
+	App ();
+	~App ();
 	
 	
 	// Variables
-	static App* instance;
-	static Logger* logger;
-	static Window* windower;
-	static Renderer* render;
-	static Gui* guier;
+	static App* app;
+	static Log* logger;
+	static StateCon* stater;
+	Window* windower;
+	Render* renderer;
+	Gui* guier;
+	VideoInput* camera;
+	//Recognizer* recognizer;
 	
 	GLFWwindow* mainWindow;
-	
-	
-	StatesId state;
-	
 	//bool useWebcam;
-	
-	//VideoInput* camera;
-	//Recognizer* recognizer;
 	
 	
 	// Functions
-	static void release_instance();
+	static void releaseApp ();
 	//std::map<unsigned int, cv::Scalar> convert_to_cvColor(std::map<unsigned int, nanogui::Color> &ngColors);
 	
 	

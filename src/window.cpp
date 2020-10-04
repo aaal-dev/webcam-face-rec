@@ -2,10 +2,15 @@
 
 namespace app {
 
-Window* Window::instance = nullptr;
-Logger* Window::logger = nullptr;
+Log* Window::logger = nullptr;
+StateCon* Window::stater = nullptr;
 
 Window::Window() {
+	logger = Log::getLog();
+	stater = StateCon::getStateCon();
+	width = stater->framebuffer_width;
+	height = stater->framebuffer_height;
+	
 	title = (char* )"Demo App";
 	
 	//boolToRenderer = {{"webcam", false}, 
@@ -20,24 +25,13 @@ Window::Window() {
 
 Window::~Window() {}
 
-Window* Window::get_instance() {
-	if (instance == nullptr)
-		instance = new Window();
-	return instance;
-}
-
-void Window::release_instance() {
-	if (instance != nullptr)
-		delete instance;
-	instance = nullptr;
-}
-
 bool Window::initialize() {
 	if(!glfwInit()) {	// Initialize GLFW
-		logger->gl_log_err("Failed to initialize GLFW\n");
+		logger->logGLError("Failed to initialize GLFW\n");
 		return false;
 	}
-	logger->gl_log ("initialize GLFW\n%s\n", glfwGetVersionString());
+	glfwSetErrorCallback(glfw_error_callback);
+	logger->logGLInfo ("initialize GLFW: %s\n", glfwGetVersionString());
 	
 	// Set the required options for GLFW
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -55,28 +49,26 @@ bool Window::initialize() {
 	glfwWindowHint(GLFW_DEPTH_BITS, 24);
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 	
-	glfwSetErrorCallback(glfw_error_callback);
-	glfwSwapInterval(1);
-	
-	startTimer();
+	if (!getMonitors()) {
+		return false;
+	}
 	return true;
 }
 
 GLFWwindow* Window::create_window() {
 	GLFWwindow* window = glfwCreateWindow(width, height, "Face", nullptr, nullptr);
 	if (!window) {
-		logger->gl_log_err("Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n" );
+		logger->logGLError("Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n" );
 		glfwTerminate();
 		return nullptr;
 	}
 	glfwMakeContextCurrent(window);
-	logger->gl_log("Open mian window");
+	glfwSwapInterval(1);
+	logger->logGLInfo("Open main GLFW window\n");
 	return window;
 }
 
-void Window::updateWindow() {
-	updateTitle();
-}
+
 
 void Window::configure_window(GLFWwindow* window) {
 	glfwSetCursorPosCallback(window, cursor_position_callback);
@@ -87,14 +79,28 @@ void Window::configure_window(GLFWwindow* window) {
     glfwSetScrollCallback(window, scroll_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwGetFramebufferSize(window, &width, &height);
-	glfwSwapBuffers(window);
 }
 
 bool Window::is_closing_window(GLFWwindow* window) {
 	return glfwWindowShouldClose(window);
 }
 
-void Window::terminateWindow() {
+void Window::check_window(GLFWwindow* window) {}
+
+void Window::update_window(GLFWwindow* window) {
+	update_title(window);
+	glfwSwapBuffers(window);
+}
+
+void Window::update() {
+	glfwPollEvents();
+}
+
+void Window::close_window(GLFWwindow* window) {
+	glfwSetWindowShouldClose(window, GL_TRUE);
+}
+
+void Window::terminate_window() {
 	glfwTerminate();
 }
 
@@ -110,39 +116,56 @@ void Window::draw(GLFWwindow* window) {
 	//render->draw();
 	//screen->drawContents();
 	//screen->drawWidgets();
-	glfwSwapBuffers(window);
-	glfwPollEvents();
 }
 
-void Window::cleanup() {
-	//render->cleanup();
-}
+void Window::cleanup() {}
 
-
-
-void Window::startTimer() {
-	startTime = glfwGetTime();
-	numberOfTicks = 0;
-	speed = 0;
-}
-
-float Window::getSpeedOnMS() {
-	numberOfTicks++;
-	double elastedTime = glfwGetTime() - startTime;
-	if (elastedTime >= 1.0) 
-	{
-		speed = 1000.0/numberOfTicks;
-		numberOfTicks = 0;
-		startTime += 1.0;
+float Window::getFPS() {
+	static double previous_seconds = glfwGetTime ();
+	static int frame_count;
+	double current_seconds = glfwGetTime ();
+	double elapsed_seconds = current_seconds - previous_seconds;
+	static double fps;
+	if (elapsed_seconds > 0.25) {
+		previous_seconds = current_seconds;
+		fps = (double)frame_count / elapsed_seconds;
+		frame_count = 0;
 	}
-	return speed;
+	frame_count++;
+	return fps;
 }
 
-void Window::updateTitle() {
+void Window::update_title(GLFWwindow* window) {
 	char* titlestr = new char[255];
-	sprintf(titlestr, "%s (%.1f ms)", title, getSpeedOnMS());
+	sprintf(titlestr, "%s (%.2f)", title, getFPS());
 	glfwSetWindowTitle(window, titlestr);
 }
+
+bool Window::getMonitors() {
+	GLFWmonitor** monitors = glfwGetMonitors(&monitorsCount);
+	GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+	if (monitors == NULL) {
+		logger->logGLError("No monitors was found by GLFW\n");
+		return false;
+	}
+	Monitor** newMonitors = new Monitor*[monitorsCount];
+	for (int i = 0; i < monitorsCount; i++) {
+		Monitor newMonitor;
+		newMonitor.monitor = monitors[i];
+		newMonitor.name = glfwGetMonitorName(monitors[i]);
+		newMonitor.videoModes = glfwGetVideoModes(monitors[i], &newMonitor.videoModesCount);
+		newMonitor.curentVideoMode = glfwGetVideoMode(monitors[i]);
+		newMonitor.isPrimary = false;
+		if (monitors[i] == primaryMonitor) {
+			newMonitor.isPrimary = true;
+			this->primaryMonitor = &newMonitor;
+		}
+		newMonitors[i] = &newMonitor;
+	}
+	this->avalableMonitors = newMonitors;
+	return true;
+}
+
 
 
   ////////////////////////
@@ -150,7 +173,7 @@ void Window::updateTitle() {
 ////////////////////////
 
 void Window::glfw_error_callback(int error, const char* description) {
-	logger->gl_log_err("GLFW ERROR: code %i msg: %s\n", error, description);
+	logger->logGLError("GLFW ERROR: code %i msg: %s\n", error, description);
 }
 
 void Window::key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
@@ -170,15 +193,44 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 
 void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	(void)window;
+	stater->framebuffer_width = width;
+	stater->framebuffer_height = height;
 	//screen->resizeCallbackEvent(width, height);
 	//render->changeViewport(0,0, width, height);
 }
 
 void Window::cursor_position_callback(GLFWwindow* window, double x, double y) {
+	stater->mouse_pos_x = x;
+	stater->mouse_pos_y = y;
 	//screen->cursorPosCallbackEvent(x, y);
 }
 
 void Window::mouse_button_callback(GLFWwindow* window, int button, int action, int modifiers) {
+	if (action == GLFW_PRESS) {
+		switch (button) {
+			case GLFW_MOUSE_BUTTON_LEFT:
+				stater->mouseButton[GLFW_MOUSE_BUTTON_LEFT] = true;
+				break;
+			case GLFW_MOUSE_BUTTON_MIDDLE:
+				stater->mouseButton[GLFW_MOUSE_BUTTON_MIDDLE] = true;
+				break;
+			case GLFW_MOUSE_BUTTON_RIGHT:
+				stater->mouseButton[GLFW_MOUSE_BUTTON_RIGHT] = true;
+				break;
+		}
+	} else if (action == GLFW_RELEASE) {
+		switch (button) {
+			case GLFW_MOUSE_BUTTON_LEFT:
+				stater->mouseButton[GLFW_MOUSE_BUTTON_LEFT] = false;
+				break;
+			case GLFW_MOUSE_BUTTON_MIDDLE:
+				stater->mouseButton[GLFW_MOUSE_BUTTON_MIDDLE] = false;
+				break;
+			case GLFW_MOUSE_BUTTON_RIGHT:
+				stater->mouseButton[GLFW_MOUSE_BUTTON_RIGHT] = false;
+				break;
+		}
+	}
 	//screen->mouseButtonCallbackEvent(button, action, modifiers);
 }
 

@@ -9,19 +9,20 @@
 #include "recognizer/landmarksdetector.hpp"
 #include "recognizer/kalmanfilter.hpp"
 
-namespace app
-{
+namespace app {
 
-struct shape
-{
+struct shape {
 	cv::Point predictedPosition;
 	cv::Point actualPosition;
 	cv::Point correctedPosition;
 };
 
-class Recognizer
-{
+class Recognizer {
 public:
+	Recognizer ();
+	~Recognizer ();
+	
+	
 	// Variables
 	cv::Mat frame; 
 	
@@ -30,38 +31,36 @@ public:
 	cv::Mat frameRGB; 
 	cv::Mat frameCannied, frameBilateraled;
 	
-	std::vector<shape> cheekToCheekShape;
-	std::vector<shape> rightEyebrowShape;
-	std::vector<shape> leftEyebrowShape;
-	std::vector<shape> noseShape;
-	std::vector<shape> rightEyeShape;
-	std::vector<shape> leftEyeShape;
-	std::vector<shape> outerMouthShape;
-	std::vector<shape> innerMouthShape;
+	std::vector <shape> cheekToCheekShape;
+	std::vector <shape> rightEyebrowShape;
+	std::vector <shape> leftEyebrowShape;
+	std::vector <shape> noseShape;
+	std::vector <shape> rightEyeShape;
+	std::vector <shape> leftEyeShape;
+	std::vector <shape> outerMouthShape;
+	std::vector <shape> innerMouthShape;
 	
-	std::map<unsigned int, bool> boolFromGui;
-	std::map<unsigned int, cv::Scalar> colorFromGui;
-	std::array<float,3> face_rotation;
+	std::map <unsigned int, bool> boolFromGui;
+	std::map <unsigned int, cv::Scalar> colorFromGui;
+	std::array <float,3> face_rotation;
+	
 	
 	// Functions
-	static Recognizer* getInstance();
-	static void releaseInstance();
-	void startDetector();
-	void detectFaces();
-	void drawFaceShape(cv::Mat &frame, Face face, cv::Scalar color, int offset);
-	std::array<float,3> get_face_rotation();
+	void startDetector ();
+	void setFrame (cv::Mat frame);
+	void detectFaces ();
+	void drawFaceShape (cv::Mat &frame, Face face, cv::Scalar color, int offset);
+	std::array <float,3> get_face_rotation ();
+	
 	
 	
 private:
-	Recognizer();
-	~Recognizer();
-	
 	// Variables
-	static Recognizer* instance;
 	//std::vector<Face> faces;
 	dlib::frontal_face_detector face_detector;
 	dlib::shape_predictor face_model;
 	FaceDetector faceDetector;
+	
 	
 	// Functions
 	

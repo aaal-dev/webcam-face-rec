@@ -8,42 +8,47 @@
 #include <fstream>
 //#include <algorithm>
 #include <sstream>
-//
-//#include <stdlib.h>
-//#include <string.h>
 
 // GLAD
 #include "glad/glad.h"
 
+// Inner classes
+#include "../log.hpp"
 
-class Shader
-{
+namespace app {
+
+class Shader {
 public:
 	Shader();
 	Shader(const char * vertex_file_path,const char * fragment_file_path);
 	~Shader();
 	
 	
-	// Functions
-	static Shader* getInstance();
-	static void releaseInstance();
-	static void initialize();
-	GLuint getShaderID() const;
-	void loadShaders(const char * vertex_file_path,const char * fragment_file_path);
-	
-	
 	// Variables
+	 
+	
+	// Functions
+	static void initialize();
+	bool loadShaders(const char * vertex_file_path,const char * fragment_file_path);
+	GLuint getShaderID() const;
+	
+	
 	
 	
 private:
+	// Variables
+	GLuint ProgramID;
+	static Log* logger;
+	
 	
 	// Functions
 	
 	
-	// Variables
-	static Shader* instance;
-	GLuint ProgramID;
+	
 	
 };
+
+
+}
 
 #endif

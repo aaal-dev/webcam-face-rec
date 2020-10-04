@@ -7,6 +7,7 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 #include <opencv2/objdetect.hpp>
+#include <opencv2/dnn.hpp>
 
 // Inner classes
 #include "landmarksdetector.hpp"
@@ -17,8 +18,17 @@ public:
 	FaceDetector();
 	~FaceDetector();
 	
+	
+	// Variables
+	
+	
+	// Functions
 	template <typename T>
 	std::vector<Face> detect_faces(const cv::Mat &frame);
+	std::vector<Face> detectFacesOpenCVDNN(cv::dnn::Net net, cv:Mat &frame);
+	std::vector<Face> detectFacesTensorflow(cv::dnn::Net net, cv:Mat &frame);
+	
+	
 	
 private:
 	// Variables
@@ -27,6 +37,8 @@ private:
 	cv::CascadeClassifier lefteye_classifier;
 	cv::CascadeClassifier righteye_classifier;
 	LandmarksDetector* landmarksDetector;
+	cv::dnn::Net netCaffe;
+	cv::dnn::Net netTensorflow;
 	
 	
 	// Functions

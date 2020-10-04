@@ -5,6 +5,11 @@
 
 //OpenCV
 #include <opencv2/videoio.hpp>
+#include <opencv2/imgproc.hpp>
+
+// Inner classes
+#include "log.hpp"
+#include "statecon.hpp"
 
 namespace app
 {
@@ -12,32 +17,33 @@ namespace app
 class VideoInput
 {
 public:
-	// Variables
-	
-	
-	// Functions
-	static VideoInput* getInstance();
-	static void releaseInstance();
-	bool openCamera();
-	bool isOpened();
-	void grabFrame();
-	cv::Mat getFrame();
-	bool isFrameGrabed();
-	static void releaseCamera();
-	
-	
-private:
 	VideoInput();
 	~VideoInput();
 	
 	
 	// Variables
-	static VideoInput* instance;
-	static cv::VideoCapture* webcam;
+	
+	
+	// Functions
+	bool openCamera();
+	bool isOpened();
+	void grabFrame();
+	cv::Mat getFrameData();
+	bool isFrameGrabed();
+	void releaseCamera();
+	
+	
+private:
+	// Variables
+	static Log* logger;
+	static StateCon* stater;
+	cv::VideoCapture* webcam;
 	cv::Mat frame;
 	bool hasFrame;
 	
+	
 	// Functions
+	
 	
 	
 };

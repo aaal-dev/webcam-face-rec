@@ -1,7 +1,10 @@
 #include "mesh.hpp"
 
-Mesh::Mesh(){indicesOffset = 0;}
+namespace app {
 
+Log* Mesh::logger = nullptr;
+
+Mesh::Mesh(){indicesOffset = 0;}
 
 Mesh::~Mesh(){}
 
@@ -40,7 +43,7 @@ void Mesh::load_model(const char* path)
 		aiProcess_SortByPType);
 	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
-		std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
+		logger->logGLError("ERROR::ASSIMP:: %s\n", import.GetErrorString());
 		throw;
 	}
     for(unsigned int m = 0; m < scene->mNumMeshes; m++)
@@ -54,10 +57,14 @@ void Mesh::load_model(const char* path)
 	}
 }
 
-void Mesh::load_shader(const char * vertex_file_path, const char * fragment_file_path) 
+bool Mesh::load_shader(const char * vertex_file_path, const char * fragment_file_path) 
 {
-	shader = Shader(vertex_file_path, fragment_file_path);
+	shader = Shader();
+	if (!shader.loadShaders(vertex_file_path, fragment_file_path)) {
+		return false;
+	}
 	shaderID = shader.getShaderID();
+	return true;
 }
 
 void Mesh::process_mesh(const aiMesh *mesh)
@@ -140,4 +147,6 @@ void Mesh::load_indices(const aiFace *face)
 {
 	for(unsigned int f = 0; f < face->mNumIndices; f++)
 		this->indices.push_back(face->mIndices[f]);
+}
+
 }

@@ -7,19 +7,28 @@
 #include <GLFW/glfw3.h>
 
 // Inner classes
-#include "logger.hpp"
+#include "log.hpp"
+#include "statecon.hpp"
 
 namespace app {
+
+struct Monitor {
+	GLFWmonitor* monitor;
+	const char* name;
+	bool isPrimary;
+	int videoModesCount;
+	const GLFWvidmode* videoModes;
+	const GLFWvidmode* curentVideoMode;
+};
 
 class Window {
 	
 public:
-	
+	Window();
+	~Window();
 	
 	
 	// Variables
-	static Logger* logger;
-	
 	char* title;
 	//std::map<unsigned int, bool> boolToRecognizer;
 	//std::map<std::string, bool> boolToRenderer;
@@ -28,55 +37,51 @@ public:
 	int width;
 	int height;
 	
-	// Functions
-	static Window* get_instance();
+	int monitorsCount;
+	Monitor** avalableMonitors;
+	Monitor* primaryMonitor;
 	
+	
+	
+	// Functions
 	bool initialize();
 	GLFWwindow* create_window();
 	
-	
 	void configure_window(GLFWwindow* window);
 	bool is_closing_window(GLFWwindow* window);
-	void updateWindow();
-	void terminateWindow();
-	void configureGui();
-	void updateTitle();
+	void check_window(GLFWwindow* window);
+	void update_window(GLFWwindow* window);
+	void update();
+	void close_window(GLFWwindow* window);
+	void terminate_window();
+	void update_title(GLFWwindow* window);
 	void draw(GLFWwindow* window);
 	void cleanup();
 	
 	
 	
 private:
-	Window();
-	~Window();
-	
-	
 	// Variables
-	static Window* instance;
-	
-	double startTime;
-	double numberOfTicks;
-	float speed;
-	
-	//nanogui::Screen* screen;
-	//nanogui::FormHelper* gui;
+	static Log* logger;
+	static StateCon* stater;
 	
 	
 	// Functions
-	static void release_instance();
-	void startTimer();
-	float getSpeedOnMS();
+	float getFPS();
+	
+	bool getMonitors();
+	bool getPrimaryMonitor();
 	
 	// Callback functions
 	static void glfw_error_callback(int error, const char* description);
-	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 	static void cursor_position_callback(GLFWwindow* window, double x, double y);
 	static void mouse_button_callback(GLFWwindow* window, int button, int action, int modifiers);
 	static void character_callback(GLFWwindow* window, unsigned int codepoint);
-	static void drop_callback(GLFWwindow* window, int count, const char **filenames);
 	static void scroll_callback(GLFWwindow* window, double x, double y);
-	
+	static void drop_callback(GLFWwindow* window, int count, const char **filenames);
+	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+	static void monitor_callback(GLFWmonitor* monitor, int event);
 	
 };
 
