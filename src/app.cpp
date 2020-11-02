@@ -35,6 +35,8 @@ bool App::initialize () {
 	
 	//useWebcam = false;
 	
+	configurer = new Config();
+	
 	windower = new Window ();
 	if (!windower->initialize ())
 		return false;
@@ -53,6 +55,8 @@ bool App::initialize () {
 	camera = new VideoInput ();
 	if (!camera->openCamera ())
 		return false;
+	
+	commander = new Command();
 	
 	return true;
 }

@@ -15,11 +15,13 @@
 #include "log.hpp"
 #include "statecon.hpp"
 
+#include "config.hpp"
 #include "render.hpp"
 #include "window.hpp"
 #include "gui.hpp"
 //#include "recognizer.hpp"
 #include "videoinput.hpp"
+#include "command.hpp"
 
 
 namespace app {
@@ -46,11 +48,13 @@ private:
 	static App* app;
 	static Log* logger;
 	static StateCon* stater;
+	Config* configurer;
 	Window* windower;
 	Render* renderer;
 	Gui* guier;
 	VideoInput* camera;
 	//Recognizer* recognizer;
+	Command* commander;
 	
 	GLFWwindow* mainWindow;
 	//bool useWebcam;

@@ -31,8 +31,10 @@ public:
 	static void initialize();
 	bool loadShaders(const char * vertex_file_path,const char * fragment_file_path);
 	GLuint getShaderID() const;
-	
-	
+	void logShaderInfo(GLuint shaderID);
+	const char* GLtypeToString (GLenum type);
+	void logAllShaderInfo (GLuint programID);
+	bool isValid (GLuint programID);
 	
 	
 private:
