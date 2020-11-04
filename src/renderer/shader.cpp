@@ -105,6 +105,7 @@ bool Shader::loadShaders(const char * vertex_file_path,const char * fragment_fil
 	return true;
 }
 
+// Log functions
 void Shader::logShaderInfo(GLuint shaderID) {
 	int InfoLogLength;
 	glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);

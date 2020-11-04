@@ -30,5 +30,5 @@
 
 // This variable allows dlib/test_for_odr_violations.h to catch people who mistakenly use
 // headers from one version of dlib with a compiled dlib binary from a different dlib version.
-#define DLIB_CHECK_FOR_VERSION_MISMATCH DLIB_VERSION_MISMATCH_CHECK__EXPECTED_VERSION_19_19_0
+#define DLIB_CHECK_FOR_VERSION_MISMATCH DLIB_VERSION_MISMATCH_CHECK__EXPECTED_VERSION_19_21_99
 

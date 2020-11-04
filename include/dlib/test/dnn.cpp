@@ -172,7 +172,7 @@ namespace
         print_spinner();
         const long nr = 3;
         const long nc = 3;
-        resizable_tensor src(5,5,nr,nr), dest(5,5,nr,nc), gradient_input(5,5,nr,nc);
+        resizable_tensor src(5,5,nr,nc), dest(5,5,nr,nc), gradient_input(5,5,nr,nc);
         tt::tensor_rand rnd;
         rnd.fill_uniform(src);
         rnd.fill_uniform(dest);
@@ -215,6 +215,58 @@ namespace
         cpu::softmax_all(dest2, src2);
         DLIB_TEST_MSG(max(abs(mat(dest1)-mat(dest2))) < 1e-5, max(abs(mat(dest1)-mat(dest2))));
 #endif
+    }
+
+    void test_mish()
+    {
+#ifdef DLIB_USE_CUDA
+        // make sure that cuda::mish and cpu::mish return the same results
+        using namespace dlib::tt;
+        print_spinner();
+        const long n = 5;
+        const long k = 5;
+        const long nr = 3;
+        const long nc = 3;
+        resizable_tensor src(n,k,nr,nc);
+        tt::tensor_rand rnd;
+        rnd.fill_uniform(src);
+
+        resizable_tensor dest1, dest2;
+        dest1.copy_size(src);
+        dest2.copy_size(src);
+        // initialize to different values in order to make sure the output is actually changed
+        dest1 = 1;
+        dest2 = 2;
+        cuda::mish(dest1, src);
+        cpu::mish(dest2, src);
+        DLIB_TEST_MSG(max(abs(mat(dest1) - mat(dest2))) < 1e-7, max(abs(mat(dest1) - mat(dest2))));
+#endif // DLIB_USE_CUDA
+    }
+
+    void test_leaky_relu()
+    {
+#ifdef DLIB_USE_CUDA
+        using namespace dlib::tt;
+        print_spinner();
+        const long n = 5;
+        const long k = 5;
+        const long nr = 3;
+        const long nc = 3;
+        const float alpha = 0.01;
+        resizable_tensor src(n, k, nr, nc);
+        tt::tensor_rand rnd;
+        rnd.fill_uniform(src);
+        resizable_tensor dest1, dest2;
+        dest1.copy_size(src);
+        dest2.copy_size(src);
+        // initialize to different values in order to make sure the output is actually changed
+        dest1 = 1;
+        dest2 = 2;
+        cuda::leaky_relu(dest1, src, alpha);
+        cpu::leaky_relu(dest2, src, alpha);
+
+        DLIB_TEST_MSG(max(abs(mat(dest1) - mat(dest2))) < 1e-7, max(abs(mat(dest1) - mat(dest2))));
+#endif // DLIB_USE_CUDA
     }
 
     void test_batch_normalize()
@@ -569,6 +621,20 @@ namespace
             memcpy(A, truth);
             DLIB_TEST(max(abs(mat(A)- mat(truth))) < 1e-5);
 #endif
+        }
+
+        {
+            const int nr = 5;
+            const int nc = 6;
+            tensor_rand rnd;
+            resizable_tensor out1(nr,nc), m(nr,nc), v(nc), out2;
+            rnd.fill_uniform(out1);
+            rnd.fill_uniform(m);
+            rnd.fill_uniform(v);
+
+            tt::scale_columns(out1, m, v);
+            out2 = scale_columns(mat(m), mat(v));
+            DLIB_TEST(max(abs(mat(out1)-mat(out2))) < 1e-6);
         }
 
         {
@@ -1828,7 +1894,19 @@ namespace
         }
         {
             print_spinner();
+            leaky_relu_ l;
+            auto res = test_layer(l);
+            DLIB_TEST_MSG(res, res);
+        }
+        {
+            print_spinner();
             sig_ l;
+            auto res = test_layer(l);
+            DLIB_TEST_MSG(res, res);
+        }
+        {
+            print_spinner();
+            mish_ l;
             auto res = test_layer(l);
             DLIB_TEST_MSG(res, res);
         }
@@ -1917,28 +1995,74 @@ namespace
             pres<res<res<res_down< // 2 prelu layers here
             tag4<repeat<9,pres,    // 9 groups, each containing 2 prelu layers  
             res_down<
-            res<
+            leaky_relu<res<
             input<matrix<unsigned char>>
-            >>>>>>>>>>>;
+            >>>>>>>>>>>>;
 
         net_type2 pnet;
+        const net_type2& const_pnet = pnet;
 
-        DLIB_TEST_MSG(pnet.num_layers == 131, pnet.num_layers);
-        DLIB_TEST_MSG(pnet.num_computational_layers == 109, pnet.num_computational_layers);
+        DLIB_TEST_MSG(pnet.num_layers == 132, pnet.num_layers);
+        DLIB_TEST_MSG(pnet.num_computational_layers == 110, pnet.num_computational_layers);
 
-        std::vector<bool> hit(pnet.num_computational_layers, false);
-        size_t count = 0;
-        visit_layer_parameter_gradients(pnet, [&](size_t i, tensor& ){hit[i] = true; ++count; });
-        for (auto x : hit)
-            DLIB_TEST(x);
-        DLIB_TEST(count == pnet.num_computational_layers);
+        {
+            std::vector<bool> hit(pnet.num_computational_layers, false);
+            size_t count = 0;
+            visit_layer_parameter_gradients(pnet, [&](size_t i, tensor& ){hit[i] = true; ++count; });
+            for (auto x : hit)
+                DLIB_TEST(x);
+            DLIB_TEST(count == pnet.num_computational_layers);
+        }
+        {
+            std::vector<bool> hit(pnet.num_computational_layers, false);
+            size_t count = 0;
+            visit_layer_parameter_gradients(const_pnet, [&](size_t i, const tensor& ){hit[i] = true; ++count; });
+            for (auto x : hit)
+                DLIB_TEST(x);
+            DLIB_TEST(count == pnet.num_computational_layers);
+        }
 
-        count = 0;
-        std::vector<bool> hit2(pnet.num_computational_layers, false);
-        visit_layer_parameters(pnet, [&](size_t i, tensor& ){hit2[i] = true; ++count; });
-        for (auto x : hit2)
-            DLIB_TEST(x);
-        DLIB_TEST(count == pnet.num_computational_layers);
+        {
+            size_t count = 0;
+            std::vector<bool> hit2(pnet.num_computational_layers, false);
+            visit_layer_parameters(pnet, [&](size_t i, tensor& ){hit2[i] = true; ++count; });
+            for (auto x : hit2)
+                DLIB_TEST(x);
+            DLIB_TEST(count == pnet.num_computational_layers);
+        }
+        {
+            size_t count = 0;
+            std::vector<bool> hit2(pnet.num_computational_layers, false);
+            visit_layer_parameters(const_pnet, [&](size_t i, const tensor& ){hit2[i] = true; ++count; });
+            for (auto x : hit2)
+                DLIB_TEST(x);
+            DLIB_TEST(count == pnet.num_computational_layers);
+        }
+
+        int num_relus = 0;
+        visit_computational_layers(pnet, [&num_relus](relu_&) { ++num_relus; });
+        DLIB_TEST(num_relus == 10);
+        num_relus = 0;
+        visit_computational_layers(const_pnet, [&num_relus](const relu_&) { ++num_relus; });
+        DLIB_TEST(num_relus == 10);
+        num_relus = 0;
+        visit_computational_layers(const_pnet, [&num_relus](relu_&) { ++num_relus; });
+        // Visiting doesn't happen in this case because a const network can't bind the non-const
+        // relu_ reference used above. 
+        DLIB_TEST(num_relus == 0);
+
+        DLIB_TEST(layer<leaky_relu>(pnet).layer_details().get_alpha() == 0.01f);
+        visit_computational_layers(pnet, [](leaky_relu_& l) { l = leaky_relu_(0.001f); });
+        DLIB_TEST(layer<leaky_relu>(pnet).layer_details().get_alpha() == 0.001f);
+
+        // make sure count_parameters() works since it depends on visiting too.  Initially the
+        // network has 0 parameters.  But once we run something through it it will allocate its
+        // parameters.
+        DLIB_TEST_MSG(count_parameters(pnet) == 0, "count_parameters(pnet): "<< count_parameters(pnet));
+        const matrix<unsigned char> input = zeros_matrix<unsigned char>(40,40);
+        pnet(input);
+        DLIB_TEST_MSG(count_parameters(pnet) == 17606, "count_parameters(pnet): "<< count_parameters(pnet));
+
     }
 
     float tensor_read_cpu(const tensor& t, long i, long k, long r, long c)
@@ -2502,7 +2626,7 @@ namespace
         print_spinner();
 
         const int num_samples = 1000;
-        const long num_channels = 2;
+        const long num_channels = 10;
         const long dimension = 3;
         ::std::vector<matrix<float>> inputs;
         ::std::vector<::std::array<matrix<float>, num_channels>> labels;
@@ -2550,9 +2674,237 @@ namespace
         trainer.set_iterations_without_progress_threshold(500);
         trainer.set_min_learning_rate(1e-6);
         trainer.set_mini_batch_size(50);
+        trainer.set_max_num_epochs(100);
         trainer.train(inputs, labels);
         const auto error_after = compute_error();
         DLIB_TEST_MSG(error_after < error_before, "multi channel error increased after training");
+#if DLIB_USE_CUDA
+        cuda::compute_loss_mean_squared_per_channel_and_pixel cuda_compute;
+        cpu::compute_loss_mean_squared_per_channel_and_pixel cpu_compute;
+        double cuda_loss, cpu_loss;
+        const tensor& output_tensor = net.subnet().get_output();
+        resizable_tensor cuda_grad(output_tensor), cpu_grad(output_tensor);
+        cuda_compute(labels.begin(), output_tensor, cuda_grad, cuda_loss);
+        cpu_compute(labels.begin(), output_tensor, cpu_grad, cpu_loss);
+        DLIB_TEST(cuda_grad.size() == cpu_grad.size());
+        for (size_t i = 0; i < cuda_grad.size(); ++i)
+        {
+            DLIB_TEST(::std::abs(*(cuda_grad.begin() + i) - *(cpu_grad.begin() + i)) < 1e-8);
+        }
+        const auto err = abs(cuda_loss - cpu_loss) / cpu_loss;
+        DLIB_TEST_MSG(err < 1e-6, "multi channel cuda and cpu losses differ");
+#endif
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void test_loss_binary_log_per_pixel_learned_params_on_trivial_two_pixel_task()
+    {
+        print_spinner();
+
+        ::std::vector<matrix<float>> x({ matrix<float,2,1>({ -1, 1 }) });
+        ::std::vector<matrix<float>> y({ matrix<float,2,1>({ -1, 1 }) });
+
+        using net_type = loss_binary_log_per_pixel<con<1,1,1,1,1,input<matrix<float>>>>;
+        net_type net;
+
+        dnn_trainer<net_type> trainer(net, sgd(0,0));
+        trainer.set_learning_rate(1e7);
+        trainer.set_max_num_epochs(1);
+        trainer.train(x, y);
+
+        const tensor& learned_params = layer<1>(net).layer_details().get_layer_params();
+        const float* learned_params_data = learned_params.host();
+
+        DLIB_TEST(learned_params_data[0] > 1e5);
+        DLIB_TEST(abs(learned_params_data[1]) < 1);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void test_loss_binary_log_per_pixel_outputs_on_trivial_task()
+    {
+        print_spinner();
+
+        constexpr int input_height = 7;
+        constexpr int input_width = 5;
+        constexpr int output_height = input_height;
+        constexpr int output_width = input_width;
+        constexpr int num_samples = 7;
+
+        ::std::vector<matrix<double>> x(num_samples);
+        ::std::vector<matrix<float>> y(num_samples);
+
+        matrix<double> xtmp(input_height, input_width);
+        matrix<float> ytmp(output_height, output_width);
+
+        ::std::default_random_engine generator(16);
+        ::std::normal_distribution<double> n01(0);
+
+        const auto z = 0.674490; // This should give us a 50/50 split between the classes
+
+        // Generate training data: random inputs x, and the corresponding target outputs y
+        for (int ii = 0; ii < num_samples; ++ii) {
+            for (int jj = 0; jj < input_height; ++jj) {
+                for (int kk = 0; kk < input_width; ++kk) {
+                    xtmp(jj, kk) = n01(generator);
+                    ytmp(jj, kk) = std::abs(xtmp(jj, kk)) > z ? 1.f : -1.f;
+                }
+            }
+            x[ii] = xtmp;
+            y[ii] = ytmp;
+        }
+
+        using net_type = loss_binary_log_per_pixel<con<1,1,1,1,1,relu<con<10,1,1,1,1,input<matrix<double>>>>>>;
+        net_type net;
+
+        dnn_trainer<net_type> trainer(net, sgd(0, 0.9));
+        trainer.set_learning_rate(1);
+        trainer.set_max_num_epochs(800);
+        trainer.train(x, y);
+
+        // The learning task is easy, so the net should have no problem
+        // getting all the outputs right.
+        const auto response = net(x);
+        for (int ii = 0; ii < num_samples; ++ii)
+            for (int jj = 0; jj < output_height; ++jj)
+                for (int kk = 0; kk < output_width; ++kk)
+                    DLIB_TEST((response[ii](jj,kk) > 0) == (y[ii](jj,kk) > 0));
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void test_loss_binary_log_per_pixel_with_noise_and_pixels_to_ignore()
+    {
+        // Test learning when some pixels are to be ignored, etc.
+
+        print_spinner();
+
+        constexpr int input_height = 5;
+        constexpr int input_width = 7;
+        constexpr int output_height = input_height;
+        constexpr int output_width = input_width;
+        const int num_samples = 1000;
+        const double ignore_probability = 0.5;
+        const double noise_probability = 0.05;
+
+        ::std::default_random_engine generator(16);
+        ::std::bernoulli_distribution ignore(ignore_probability);
+        ::std::bernoulli_distribution noise_occurrence(noise_probability);
+        ::std::bernoulli_distribution noisy_label(0.5);
+
+        ::std::vector<matrix<double>> x(num_samples);
+        ::std::vector<matrix<float>> y(num_samples);
+
+        ::std::vector<int> truth_histogram(2);
+
+        matrix<double> xtmp(input_height, input_width);
+        matrix<float> ytmp(output_height, output_width);
+
+        // The function to be learned.
+        const auto ground_truth = [](const matrix<double>& x, int row, int column) {
+            double sum = 0.0;
+            const int first_column = std::max(0, column - 1);
+            const int last_column = std::min(static_cast<int>(x.nc() - 1), column + 1);
+            for (int c = first_column; c <= last_column; ++c) {
+                sum += x(row, c);
+            }
+            DLIB_TEST(sum < 2.0 * (last_column - first_column + 1));
+            return sum > (last_column - first_column + 1);
+        };
+
+        for ( int ii = 0; ii < num_samples; ++ii ) {
+            for ( int jj = 0; jj < input_height; ++jj ) {
+                for ( int kk = 0; kk < input_width; ++kk ) {
+                    // Generate numbers between 0 and 2.
+                    double value = static_cast<double>(ii + jj + kk) / 10.0;
+                    value -= (static_cast<int>(value) / 2) * 2;
+                    DLIB_TEST(value >= 0.0 && value < 2.0);
+                    xtmp(jj, kk) = value;
+                }
+            }
+            x[ii] = xtmp;
+
+            for ( int jj = 0; jj < output_height; ++jj ) {
+                for ( int kk = 0; kk < output_width; ++kk ) {
+                    const bool truth = ground_truth(x[ii], jj, kk);
+                    ++truth_histogram[truth];
+                    if (ignore(generator)) {
+                        ytmp(jj, kk) = 0.f;
+                    }
+                    else if (noise_occurrence(generator)) {
+                        ytmp(jj, kk) = noisy_label(generator) ? 1.f : -1.f;
+                    }
+                    else {
+                        ytmp(jj, kk) = truth ? 1.f : -1.f;
+                    }
+                }
+            }
+
+            y[ii] = ytmp;
+        }
+
+        const int num_total_elements = num_samples * output_height * output_width;
+
+        { // Require a reasonably balanced truth histogram in order to make sure that a trivial classifier is not enough
+            const int required_min_histogram_value = static_cast<int>(::std::ceil(num_total_elements / 2.0 * 0.375));
+            for (auto histogram_value : truth_histogram) {
+                DLIB_TEST_MSG(histogram_value >= required_min_histogram_value,
+                              "Histogram value = " << histogram_value << ", required = " << required_min_histogram_value);
+            }
+        }
+
+        using net_type = loss_binary_log_per_pixel<con<1,1,input_width,1,1,input<matrix<double>>>>;
+        net_type net;
+        sgd defsolver(0,0.9);
+        dnn_trainer<net_type> trainer(net, defsolver);
+        trainer.set_learning_rate(0.1);
+        trainer.set_min_learning_rate(0.01);
+        trainer.set_mini_batch_size(50);
+        trainer.set_max_num_epochs(170);
+        trainer.train(x, y);
+
+        const ::std::vector<matrix<float>> predictions = net(x);
+
+        int num_correct = 0;
+
+        for ( int ii = 0; ii < num_samples; ++ii ) {
+            const matrix<float>& prediction = predictions[ii];
+            DLIB_TEST(prediction.nr() == output_height);
+            DLIB_TEST(prediction.nc() == output_width);
+            for ( int jj = 0; jj < output_height; ++jj )
+                for ( int kk = 0; kk < output_width; ++kk )
+                    if ( (prediction(jj, kk) > 0.f) == ground_truth(x[ii], jj, kk) )
+                        ++num_correct;
+        }
+
+        // First some sanity checks.
+        const int num_correct_max = num_total_elements;
+        DLIB_TEST(num_correct_max == ::std::accumulate(truth_histogram.begin(), truth_histogram.end(), 0));
+        DLIB_TEST_MSG(num_correct <= num_correct_max,
+                      "Number of correctly classified elements = " << num_correct << ", max = " << num_correct_max);
+
+        // This is the real test, verifying that we have actually learned something.
+        const int num_correct_required = static_cast<int>(::std::ceil(0.9 * num_correct_max));
+        DLIB_TEST_MSG(num_correct >= num_correct_required,
+                      "Number of correctly classified elements = " << num_correct << ", required = " << num_correct_required);
+
+#if DLIB_USE_CUDA
+        cuda::compute_loss_binary_log_per_pixel cuda_compute;
+        cpu::compute_loss_binary_log_per_pixel cpu_compute;
+        double cuda_loss, cpu_loss;
+        const tensor& output_tensor = net.subnet().get_output();
+        resizable_tensor cuda_grad(output_tensor), cpu_grad(output_tensor);
+        cuda_compute(y.begin(), output_tensor, cuda_grad, cuda_loss);
+        cpu_compute(y.begin(), output_tensor, cpu_grad, cpu_loss);
+        DLIB_TEST(cuda_grad.size() == cpu_grad.size());
+        for (size_t i = 0; i < cuda_grad.size(); ++i)
+        {
+            DLIB_TEST(::std::abs(*(cuda_grad.begin() + i) - *(cpu_grad.begin() + i)) < 1e-8);
+        }
+        const auto err = abs(cuda_loss - cpu_loss) / cpu_loss;
+        DLIB_TEST_MSG(err < 1e-6, "binary log per pixel cuda and cpu losses differ");
+#endif
     }
 
 // ----------------------------------------------------------------------------------------
@@ -2663,8 +3015,8 @@ namespace
 
         // Feed forward the training samples.
         resizable_tensor temp_tensor;
-        net.subnet().to_tensor(&x[0], &x[0] + num_samples, temp_tensor);
-        net.subnet().forward(temp_tensor);
+        net.to_tensor(&x[0], &x[0] + num_samples, temp_tensor);
+        net.forward(temp_tensor);
         const dimpl::subnet_wrapper<filter_type> wsub(net.subnet());
         const tensor& output_tensor = wsub.get_output();
         const float* const out_data = output_tensor.host();
@@ -2887,6 +3239,23 @@ namespace
         const int num_correct_required = static_cast<int>(::std::ceil(0.9 * num_correct_max));
         DLIB_TEST_MSG(num_correct >= num_correct_required,
                       "Number of correctly classified elements = " << num_correct << ", required = " << num_correct_required);
+
+#if DLIB_USE_CUDA
+        cuda::compute_loss_multiclass_log_per_pixel cuda_compute;
+        cpu::compute_loss_multiclass_log_per_pixel cpu_compute;
+        double cuda_loss, cpu_loss;
+        const tensor& output_tensor = net.subnet().get_output();
+        resizable_tensor cuda_grad(output_tensor), cpu_grad(output_tensor);
+        cuda_compute(y.begin(), output_tensor, cuda_grad, cuda_loss);
+        cpu_compute(y.begin(), output_tensor, cpu_grad, cpu_loss);
+        DLIB_TEST(cuda_grad.size() == cpu_grad.size());
+        for (size_t i = 0; i < cuda_grad.size(); ++i)
+        {
+            DLIB_TEST(::std::abs(*(cuda_grad.begin() + i) - *(cpu_grad.begin() + i)) < 1e-8);
+        }
+        const auto err = abs(cuda_loss - cpu_loss) / cpu_loss;
+        DLIB_TEST_MSG(err < 1e-6, "multiclass log per pixel cuda and cpu losses differ");
+#endif
     }
 
 // ----------------------------------------------------------------------------------------
@@ -2981,7 +3350,169 @@ namespace
             DLIB_TEST_MSG(num_weighted_class > num_not_weighted_class,
                           "The weighted class (" << weighted_class << ") does not dominate: "
                           << num_weighted_class << " <= " << num_not_weighted_class);
+
+#if DLIB_USE_CUDA
+            cuda::compute_loss_multiclass_log_per_pixel_weighted cuda_compute;
+            cpu::compute_loss_multiclass_log_per_pixel_weighted cpu_compute;
+            double cuda_loss, cpu_loss;
+            const tensor& output_tensor = net.subnet().get_output();
+            resizable_tensor cuda_grad(output_tensor), cpu_grad(output_tensor);
+            cuda_compute(y_weighted.begin(), output_tensor, cuda_grad, cuda_loss);
+            cpu_compute(y_weighted.begin(), output_tensor, cpu_grad, cpu_loss);
+            DLIB_TEST(cuda_grad.size() == cpu_grad.size());
+            for (size_t i = 0; i < cuda_grad.size(); ++i)
+            {
+                DLIB_TEST(::std::abs(*(cuda_grad.begin() + i) - *(cpu_grad.begin() + i)) < 1e-8);
+            }
+            const auto err = abs(cuda_loss - cpu_loss) / cpu_loss;
+            DLIB_TEST_MSG(err < 1e-6, "multi class log per pixel weighted cuda and cpu losses differ");
+#endif
         }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void test_loss_multiclass_log_weighted()
+    {
+
+        print_spinner();
+
+        constexpr int input_height = 5;
+        constexpr int input_width = 7;
+        const size_t num_samples = 1000;
+        const size_t num_classes = 4;
+
+        ::std::vector<matrix<double>> x(num_samples);
+        ::std::vector<unsigned long> y(num_samples);
+
+        matrix<double> xtmp(input_height, input_width);
+
+        dlib::rand rnd;
+        // Generate input data
+        for (size_t ii = 0; ii < num_samples; ++ii)
+        {
+            for (int jj = 0; jj < input_height; ++jj)
+            {
+                for (int kk = 0; kk < input_width; ++kk)
+                {
+                    xtmp(jj, kk) = rnd.get_random_float();
+                }
+            }
+            x[ii] = xtmp;
+            y[ii] = rnd.get_integer_in_range(0, num_classes);
+        }
+
+        using net_type = loss_multiclass_log_weighted<fc<num_classes, input<matrix<double>>>>;
+
+        ::std::vector<weighted_label<unsigned long>> y_weighted(num_samples);
+
+        for (size_t weighted_class = 0; weighted_class < num_classes; ++weighted_class)
+        {
+
+            print_spinner();
+
+            // Assign weights
+            for (size_t ii = 0; ii < num_samples; ++ii)
+            {
+                const unsigned long label = y[ii];
+                const float weight
+                    = label == weighted_class
+                    ? 1.4f
+                    : 0.6f;
+                y_weighted[ii] = weighted_label<unsigned long>(label, weight);
+            }
+
+            net_type net;
+            sgd defsolver(0, 0.9);
+            dnn_trainer<net_type> trainer(net, defsolver);
+            trainer.set_learning_rate(0.1);
+            trainer.set_min_learning_rate(0.01);
+            trainer.set_mini_batch_size(10);
+            trainer.set_max_num_epochs(10);
+            trainer.train(x, y_weighted);
+
+            const ::std::vector<unsigned long> predictions = net(x);
+
+            int num_weighted_class = 0;
+            int num_not_weighted_class = 0;
+
+            for (size_t ii = 0; ii < num_samples; ++ii)
+            {
+                if (predictions[ii] == weighted_class)
+                    ++num_weighted_class;
+                else
+                    ++num_not_weighted_class;
+            }
+
+            DLIB_TEST_MSG(num_weighted_class > num_not_weighted_class,
+                          "The weighted class (" << weighted_class << ") does not dominate: "
+                          << num_weighted_class << " <= " << num_not_weighted_class);
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void test_loss_multibinary_log()
+    {
+        print_spinner();
+        dlib::rand rnd;
+
+        const long dims = 3;
+        const std::vector<float> empty_label(2, -1.f);
+        std::vector<matrix<float, 0, 1>> samples;
+        std::vector<std::vector<float>> labels(128, empty_label);
+
+        for (size_t i = 0; i < labels.size(); ++i)
+        {
+            matrix<float, 0, 1> x = matrix_cast<float>(randm(dims, 1)) * rnd.get_double_in_range(1, 9);
+            const auto norm = sqrt(sum(squared(x)));
+            if (norm < 3)
+            {
+                labels[i][0] = 1.f;
+            }
+            else if (3 <= norm && norm < 6)
+            {
+                labels[i][0] = 1.f;
+                labels[i][1] = 1.f;
+            }
+            else
+            {
+                labels[i][1] = 1.f;
+            }
+            samples.push_back(std::move(x));
+        }
+
+        using net_type = loss_multibinary_log<fc<2, relu<bn_fc<fc<10, input<matrix<float, 0, 1>>>>>>>;
+        net_type net;
+
+        auto compute_error = [&net, &samples, &labels, dims]()
+        {
+            const auto preds = net(samples);
+            double num_wrong = 0;
+            for (size_t i = 0; i < labels.size(); ++i)
+            {
+                for (size_t j = 0; j < labels[i].size(); ++j)
+                {
+                    if ((labels[i][j] == 1 && preds[i][j] < 0) ||
+                        (labels[i][j] == 0 && preds[i][j] > 0))
+                    {
+                        ++num_wrong;
+                    }
+                }
+            }
+            return num_wrong / labels.size() / dims;
+        };
+
+        dnn_trainer<net_type> trainer(net);
+        const auto error_before = compute_error();
+        trainer.set_learning_rate(0.1);
+        trainer.set_iterations_without_progress_threshold(10);
+        trainer.set_mini_batch_size(128);
+        trainer.set_min_learning_rate(1e-3);
+        trainer.train(samples, labels);
+        const auto error_after = compute_error();
+
+        DLIB_TEST_MSG(error_after < error_before && error_after == 0, "multibinary_log error increased after training");
     }
 
 // ----------------------------------------------------------------------------------------
@@ -3231,6 +3762,58 @@ namespace
 
     }
 
+    void test_layers_scale_and_scale_prev()
+    {
+        print_spinner();
+        using net_type1 = scale1<con<3,1,1,1,1,avg_pool_everything<tag1<input_rgb_image>>>>;
+        using net_type2 = scale_prev2<skip1<tag2<con<3,1,1,1,1,avg_pool_everything<tag1<input_rgb_image>>>>>>;
+
+        dlib::tt::tensor_rand rnd;
+        dlib::resizable_tensor x(1, 3, 64, 64);
+        rnd.fill_gaussian(x);
+        net_type1 net1;
+        net_type2 net2;
+        net1.forward(x);
+        net2.forward(x);
+
+        // make sure both convolutional layers have the same weights
+        layer<3>(net2).layer_details() = layer<1>(net1).layer_details();
+        const auto& params1 = layer<1>(net1).layer_details().get_layer_params();
+        const auto& params2 = layer<3>(net2).layer_details().get_layer_params();
+        DLIB_CASSERT(params1.size() == params2.size());
+        for (size_t i = 0; i < params1.size(); ++i)
+        {
+            DLIB_CASSERT(*(params1.begin() + i) == *(params2.begin() + i));
+        }
+        net2.forward(x);
+
+        // make sure both outputs are the same
+        const auto& out1 = net1.get_output();
+        const auto& out2 = net2.get_output();
+        DLIB_TEST(out1.size() == out2.size());
+        for (size_t i = 0; i < out1.size(); ++i)
+        {
+            DLIB_TEST(*(out1.begin() + i) == *(out2.begin() + i));
+        }
+
+        // make sure gradients are the same (within some precision)
+        const double epsilon = 1e-4;
+        dlib::resizable_tensor gradient(out1);
+        rnd.fill_gaussian(gradient);
+
+        net1.back_propagate_error(x, gradient);
+        const auto& grad1 = layer<1>(net1).get_parameter_gradient();
+
+        net2.back_propagate_error(x, gradient);
+        const auto& grad2 = layer<3>(net2).get_parameter_gradient();
+
+        DLIB_TEST(grad1.size() == grad2.size());
+        for (size_t i = 0; i < grad1.size(); ++i)
+        {
+            DLIB_TEST(::std::abs(*(grad1.begin() + i) - *(grad2.begin() + i)) < epsilon);
+        }
+    }
+
 // ----------------------------------------------------------------------------------------
     
     // This test really just checks if the mmod loss goes negative when a whole lot of overlapping
@@ -3382,6 +3965,8 @@ namespace
             test_softmax();
             test_softmax_all();
             test_sigmoid();
+            test_mish();
+            test_leaky_relu();
             test_batch_normalize();
             test_batch_normalize_conv();
             test_basic_tensor_ops();
@@ -3396,15 +3981,21 @@ namespace
             test_multioutput_linear_regression();
             test_simple_autoencoder();
             test_loss_mean_squared_per_channel_and_pixel();
+            test_loss_binary_log_per_pixel_learned_params_on_trivial_two_pixel_task();
+            test_loss_binary_log_per_pixel_outputs_on_trivial_task();
+            test_loss_binary_log_per_pixel_with_noise_and_pixels_to_ignore();
             test_loss_multiclass_per_pixel_learned_params_on_trivial_single_pixel_task();
             test_loss_multiclass_per_pixel_activations_on_trivial_single_pixel_task();
             test_loss_multiclass_per_pixel_outputs_on_trivial_task();
             test_loss_multiclass_per_pixel_with_noise_and_pixels_to_ignore();
             test_loss_multiclass_per_pixel_weighted();
+            test_loss_multiclass_log_weighted();
+            test_loss_multibinary_log();
             test_serialization();
             test_loss_dot();
             test_loss_multimulticlass_log();
             test_loss_mmod();
+            test_layers_scale_and_scale_prev();
         }
 
         void perform_test()
