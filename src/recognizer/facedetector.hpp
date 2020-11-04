@@ -25,8 +25,8 @@ public:
 	// Functions
 	template <typename T>
 	std::vector<Face> detect_faces(const cv::Mat &frame);
-	std::vector<Face> detectFacesOpenCVDNN(cv::dnn::Net net, cv:Mat &frame);
-	std::vector<Face> detectFacesTensorflow(cv::dnn::Net net, cv:Mat &frame);
+	std::vector<Face> detectFacesOpenCVDNN(cv::dnn::Net net, cv::Mat &frame);
+	std::vector<Face> detectFacesTensorflow(cv::dnn::Net net, cv::Mat &frame);
 	
 	
 	
@@ -39,6 +39,9 @@ private:
 	LandmarksDetector* landmarksDetector;
 	cv::dnn::Net netCaffe;
 	cv::dnn::Net netTensorflow;
+	float confidenceThreshold;
+	double inScaleFactor;
+	cv::Scalar meanVal;
 	
 	
 	// Functions

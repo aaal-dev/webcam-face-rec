@@ -9,6 +9,9 @@ FaceDetector::FaceDetector()
 	landmarksDetector = new LandmarksDetector("../../data/shape_predictor_68_face_landmarks.dat");
 	netCaffe = cv::dnn::readNetFromCaffe("../../data/res10_300x300_ssd_iter_140000_fp16..prototxt", "../../data/res10_300x300_ssd_iter_140000_fp16.caffemodel");
 	netTensorflow = cv::dnn::readNetFromTensorflow("../../data/opencv_face_detector.pbtxt", "../../data/opencv_face_detector_uint8.pb");
+	confidenceThreshold = 0.7;
+	inScaleFactor = 1.0;
+	meanVal = cv::Scalar(104.0, 177.0, 123.0);
 }
 
 FaceDetector::~FaceDetector(){}
@@ -63,13 +66,14 @@ std::vector<Face> FaceDetector::detect_faces<unsigned char>(const cv::Mat &frame
 	return faces;
 }
 
-std::vector<Face> FaceDetector::detectFacesOpenCVDNN(cv::dnn::Net net, cv:Mat &frame) {
+std::vector<Face> FaceDetector::detectFacesOpenCVDNN(cv::dnn::Net net, cv::Mat &frame) {
 	int frameHeight = frame.rows;
     int frameWidth = frame.cols;
-	cv::Mat inputBlob = cv::dnn::blobFromImage(frame, inScaleFactor, cv::Size(inWidth, inHeight), meanVal, false, false);
+	cv::Mat inputBlob = cv::dnn::blobFromImage(frame, inScaleFactor, cv::Size(300, 300), meanVal, false, false);
 	net.setInput(inputBlob, "data");
     cv::Mat detection = net.forward("detection_out");
 	cv::Mat detectionMat(detection.size[2], detection.size[3], CV_32F, detection.ptr<float>());
+	std::vector<Face> faces;
 	for(int i = 0; i < detectionMat.rows; i++) {
 		float confidence = detectionMat.at<float>(i, 2);
 		if(confidence > confidenceThreshold) {
@@ -77,18 +81,23 @@ std::vector<Face> FaceDetector::detectFacesOpenCVDNN(cv::dnn::Net net, cv:Mat &f
 			int y1 = static_cast<int>(detectionMat.at<float>(i, 4) * frameHeight);
 			int x2 = static_cast<int>(detectionMat.at<float>(i, 5) * frameWidth);
 			int y2 = static_cast<int>(detectionMat.at<float>(i, 6) * frameHeight);
-			cv::rectangle(frameOpenCVDNN, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(0, 255, 0),2, 4);
+			Face face;
+			face.frame = frame;
+			face.face_rect = cv::Rect(cv::Point(x1, y1), cv::Point(x2, y2));
+			faces.push_back(face);
 		}
 	}
+	return faces;
 }
 
-std::vector<Face> FaceDetector::detectFacesTensorflow(cv::dnn::Net net, cv:Mat &frame) {
+std::vector<Face> FaceDetector::detectFacesTensorflow(cv::dnn::Net net, cv::Mat &frame) {
 	int frameHeight = frame.rows;
     int frameWidth = frame.cols;
-	cv::Mat inputBlob = cv::dnn::blobFromImage(frame, inScaleFactor, cv::Size(inWidth, inHeight), meanVal, true, false);
+	cv::Mat inputBlob = cv::dnn::blobFromImage(frame, inScaleFactor, cv::Size(300, 300), meanVal, true, false);
 	net.setInput(inputBlob, "data");
     cv::Mat detection = net.forward("detection_out");
 	cv::Mat detectionMat(detection.size[2], detection.size[3], CV_32F, detection.ptr<float>());
+	std::vector<Face> faces;
 	for(int i = 0; i < detectionMat.rows; i++) {
 		float confidence = detectionMat.at<float>(i, 2);
 		if(confidence > confidenceThreshold) {
@@ -96,9 +105,13 @@ std::vector<Face> FaceDetector::detectFacesTensorflow(cv::dnn::Net net, cv:Mat &
 			int y1 = static_cast<int>(detectionMat.at<float>(i, 4) * frameHeight);
 			int x2 = static_cast<int>(detectionMat.at<float>(i, 5) * frameWidth);
 			int y2 = static_cast<int>(detectionMat.at<float>(i, 6) * frameHeight);
-			cv::rectangle(frameOpenCVDNN, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(0, 255, 0),2, 4);
+			Face face;
+			face.frame = frame;
+			face.face_rect = cv::Rect(cv::Point(x1, y1), cv::Point(x2, y2));
+			faces.push_back(face);
 		}
 	}
+	return faces;
 }
 
 cv::Point FaceDetector::get_nose_base(const Face &face)
