@@ -22,6 +22,7 @@ bool VideoInput::openCamera() {
 #else
 	webcam = new cv::VideoCapture(0, cv::CAP_AVFOUNDATION);
 #endif
+	
 	if (!webcam->isOpened()) {
 		logger->logGLError("Unable to connect to camera.\n" );
 		return false;
