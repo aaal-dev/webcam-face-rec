@@ -10,6 +10,8 @@
 #include <dlib/image_io.h>
 #include <dlib/matrix.h>
 #include <dlib/rand.h>
+#include <dlib/compress_stream.h>
+#include <dlib/base64.h>
 
 #include "tester.h"
 
@@ -1754,6 +1756,23 @@ namespace
                 << " error: " << max(abs(chip-255)) );
         }
 
+        // So the same as above, but for an image with float values that are all the same to make
+        // sure noting funny happens for float images.
+        {
+            print_spinner();
+            const long nr = 53;
+            const long nc = 67;
+            const long size = 8*9;
+            const double angle = 30*pi/180;
+
+            matrix<float> img(501,501), chip;
+            img = 1234.5;
+            chip_details details(centered_rect(center(get_rect(img)),nr,nc), size, angle);
+            extract_image_chip(img, details, chip);
+            DLIB_TEST_MSG(max(abs(chip-1234.5))==0,"nr: " << nr << "  nc: "<< nc << "  size: " << size << "  angle: " << angle 
+                << " error: " << max(abs(chip-255)) );
+        }
+
 
         {
             // Make sure that the interpolation in extract_image_chip() keeps stuff in the
@@ -2237,7 +2256,32 @@ namespace
             }
         }
     }
-    
+
+    void test_draw_string()
+    {
+        print_spinner();
+        matrix<rgb_pixel> image{48, 48};
+        assign_all_pixels(image, rgb_pixel{0, 0, 0});
+        draw_string(image, point{10, 15}, string{"cat"}, rgb_pixel{255, 255, 255});
+
+        matrix<rgb_pixel> result;
+        const std::string data{"gQgLudERwR0JqP9kUiitFNDYSO9rdZzdmeDmricAlM5f5RBqzTlaW6Lp704mTXJq/WXHTQ84wWnGAA=="};
+        ostringstream sout;
+        istringstream sin;
+        base64 base64_coder;
+        compress_stream::kernel_1ea compressor;
+        sin.str(data);
+        base64_coder.decode(sin, sout);
+        sin.clear();
+        sin.str(sout.str());
+        sout.clear();
+        sout.str("");
+        compressor.decompress(sin, sout);
+        sin.clear();
+        sin.str(sout.str());
+        deserialize(result, sin);
+        DLIB_TEST(image == result);
+    }
 
 // ----------------------------------------------------------------------------------------
 
@@ -2342,6 +2386,7 @@ namespace
             test_null_rotate_image_with_interpolation();
             test_null_rotate_image_with_interpolation_quadratic();
             test_interpolate_bilinear();
+            test_draw_string();
         }
     } a;
 

@@ -1113,10 +1113,10 @@ namespace dlib
             while (previous_loss_values_to_keep_until_disk_sync.size() > 2 * gradient_updates_since_last_sync)
                 previous_loss_values_to_keep_until_disk_sync.pop_front();
 
-            // Always retry if there are any nan values
+            // Always retry if there are any nan or inf values
             for (auto x : previous_loss_values_to_keep_until_disk_sync)
             {
-                if (std::isnan(x))
+                if (std::isnan(x) || std::isinf(x))
                     return true;
             }
 
@@ -1372,6 +1372,7 @@ namespace dlib
         out << "  get_train_one_step_calls():                 " << trainer.get_train_one_step_calls() << endl;
         out << "  synchronization file:                       " << trainer.get_synchronization_file() << endl;
         out << "  trainer.get_solvers()[0]:                   " << trainer.get_solvers()[0] << endl;
+        out << "  mini batch size:                            " << trainer.get_mini_batch_size() << endl;
         auto sched = trainer.get_learning_rate_schedule();
         if (sched.size() != 0)
         {

@@ -7,15 +7,15 @@ Log* App::logger = nullptr;
 StateCon* App::stater = nullptr;
 
 App::App () {
-	logger = Log::getLog ();
-	stater = StateCon::getStateCon ();
+	logger = Log::getLog();
+	stater = StateCon::getStateCon();
 }
 
 App::~App () {}
 
 App* App::getApp () {
 	if (app == nullptr)
-		app = new App ();
+		app = new App();
 	return app;
 }
 
@@ -26,10 +26,10 @@ void App::releaseApp () {
 }
 
 bool App::initialize () {
-	logger->restartGLlog ();
-	logger->logGLInfo ("initialize appication\n");
+	logger->restartGLlog();
+	logger->logGLInfo( "initialize appication\n" );
 	
-	stater->setAppState (stater->SPLASH_SCREEN);
+	stater->setAppState(stater->SPLASH_SCREEN);
 	stater->framebuffer_width = 800;
 	stater->framebuffer_height = 600;
 	
@@ -37,7 +37,7 @@ bool App::initialize () {
 	
 	configurer = new Config();
 	
-	windower = new Window ();
+	windower = new Window();
 	if (!windower->initialize ())
 		return false;
 		

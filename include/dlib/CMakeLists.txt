@@ -8,7 +8,8 @@ cmake_minimum_required(VERSION 2.8.12)
 
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-
+set(BUILD_SHARED_LIBS true)
+option(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS} ON)
 if(POLICY CMP0048)
    cmake_policy(SET CMP0048 NEW)
 endif()
@@ -104,7 +105,7 @@ if (DLIB_IN_PROJECT_BUILD)
    endif()
 
    # Tell cmake to build dlib as a static library
-   set(BUILD_SHARED_LIBS false)
+   set(BUILD_SHARED_LIBS true)
 
 elseif(BUILD_SHARED_LIBS)
    if (MSVC)
@@ -199,6 +200,7 @@ if (NOT TARGET dlib)
    toggle_preprocessor_switch(DLIB_ENABLE_STACK_TRACE)
    option(DLIB_USE_MKL_SEQUENTIAL ${DLIB_USE_MKL_SEQUENTIAL_STR} OFF)
    option(DLIB_USE_MKL_WITH_TBB ${DLIB_USE_MKL_WITH_TBB_STR} OFF)
+   
 
    if(DLIB_ENABLE_ASSERTS)
       # Set these variables so they are set in the config.h.in file when dlib
@@ -269,6 +271,7 @@ if (NOT TARGET dlib)
       entropy_decoder/entropy_decoder_kernel_2.cpp
       entropy_encoder/entropy_encoder_kernel_1.cpp
       entropy_encoder/entropy_encoder_kernel_2.cpp
+      gui_widgets/fonts.cpp
       md5/md5_kernel_1.cpp
       tokenizer/tokenizer_kernel_1.cpp
       unicode/unicode.cpp
@@ -315,6 +318,7 @@ if (NOT TARGET dlib)
          cuda/tensor_tools.cpp
          data_io/image_dataset_metadata.cpp
          data_io/mnist.cpp
+         data_io/cifar.cpp
          global_optimization/global_function_search.cpp
          filtering/kalman_filter.cpp
          svm/auto.cpp
@@ -405,7 +409,6 @@ if (NOT TARGET dlib)
 
       if (NOT DLIB_NO_GUI_SUPPORT)
          set(source_files ${source_files}
-            gui_widgets/fonts.cpp
             gui_widgets/widgets.cpp
             gui_widgets/drawable.cpp
             gui_widgets/canvas_drawing.cpp
@@ -611,6 +614,12 @@ if (NOT TARGET dlib)
 
          if (CUDA_FOUND AND MSVC AND NOT CUDA_CUBLAS_LIBRARIES AND "${CMAKE_SIZEOF_VOID_P}" EQUAL "4")
             message(WARNING "You have CUDA installed, but we can't use it unless you put visual studio in 64bit mode.")
+            set(CUDA_FOUND 0)
+         endif()
+
+         if (NOT CUDA_CUBLAS_LIBRARIES)
+            message(STATUS "Found CUDA, but CMake was unable to find the cuBLAS libraries that should be part of every basic CUDA "
+               "install. Your CUDA install is somehow broken or incomplete. Since cuBLAS is required for dlib to use CUDA we won't use CUDA.")
             set(CUDA_FOUND 0)
          endif()
 

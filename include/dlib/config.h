@@ -23,8 +23,8 @@
 #define DLIB_PNG_SUPPORT
 /* #undef DLIB_GIF_SUPPORT */
 /* #undef DLIB_USE_FFTW */
-/* #undef DLIB_USE_BLAS */
-/* #undef DLIB_USE_LAPACK */
+#define DLIB_USE_BLAS
+#define DLIB_USE_LAPACK
 /* #undef DLIB_USE_CUDA */
 /* #undef DLIB_USE_MKL_FFT */
 

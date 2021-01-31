@@ -338,6 +338,30 @@ namespace dlib
 
     // -----------------------------------------------------------------------------------
 
+        void layer_normalize (
+            const double eps,
+            resizable_tensor& dest,
+            resizable_tensor& means,
+            resizable_tensor& invstds,
+            const tensor& src,
+            const tensor& gamma,
+            const tensor& beta
+        );
+
+        void layer_normalize_gradient (
+            const double eps,
+            const tensor& gradient_input,
+            const tensor& means,
+            const tensor& invstds,
+            const tensor& src,
+            const tensor& gamma,
+            tensor& src_grad,
+            tensor& gamma_grad,
+            tensor& beta_grad
+        );
+
+    // -----------------------------------------------------------------------------------
+
         void threshold (
             tensor& data,
             float thresh
@@ -391,6 +415,19 @@ namespace dlib
         );
 
         void mish_gradient (
+            tensor& grad,
+            const tensor& src,
+            const tensor& gradient_input
+        );
+
+    // ----------------------------------------------------------------------------------------
+
+        void gelu (
+            tensor& dest,
+            const tensor& src
+        );
+
+        void gelu_gradient (
             tensor& grad,
             const tensor& src,
             const tensor& gradient_input
@@ -495,7 +532,7 @@ namespace dlib
                 tensor& gradient,
                 double& loss
             );
-            
+
             mutable cuda_data_void_ptr buf;
         };
 
@@ -676,7 +713,7 @@ namespace dlib
                 for (long i = 0; i < subnetwork_output.num_samples(); ++i, ++truth)
                 {
                     const auto& t = *truth;
-                    DLIB_ASSERT(t.size() == subnetwork_output.k());
+                    DLIB_ASSERT(static_cast<long>(t.size()) == subnetwork_output.k());
                     for (size_t j = 0; j < t.size(); ++j) {
                         DLIB_ASSERT(t[j].nr() == subnetwork_output.nr());
                         DLIB_ASSERT(t[j].nc() == subnetwork_output.nc());
