@@ -26,14 +26,12 @@ void App::releaseApp () {
 }
 
 bool App::initialize () {
-	logger->restartGLlog();
-	logger->logGLInfo( "initialize appication\n" );
+	logger->initialize();
+	logger->write(Log::LOG_INFO, "initialize appication\n");
 	
-	stater->setAppState(stater->SPLASH_SCREEN);
+	stater->setAppState(StateCon::SPLASH_SCREEN);
 	stater->framebuffer_width = 800;
 	stater->framebuffer_height = 600;
-	
-	//useWebcam = false;
 	
 	configurer = new Config();
 	
@@ -41,19 +39,20 @@ bool App::initialize () {
 	if (!windower->initialize ())
 		return false;
 		
-	mainWindow = windower->create_window ();
-	windower->configure_window (mainWindow);
+	mainWindow = windower->create_window();
+	windower->configure_window(mainWindow);
 	
 	renderer = new Render();
 	if (!renderer->initialize_GL ((GLADloadproc)glfwGetProcAddress))
 		return false;
 	
-	guier = new Gui ();
-	if (!guier->initialize_gui ())
+	guier = new Gui();
+	if (!guier->initialize_gui())
 		return false;
 	
-	camera = new VideoInput ();
-	if (!camera->openCamera ())
+	camera = new VideoInput();
+	camera->useWebcam = false;
+	if (!camera->openCamera())
 		return false;
 	
 	commander = new Command();
@@ -61,10 +60,10 @@ bool App::initialize () {
 	return true;
 }
 
-bool App::run () {
+void App::run () {
 	logger->logGLInfo ("run appication");
 	
-	guier->configure_gui ();
+	guier->configure_gui();
 	
 	while (!windower->is_closing_window (mainWindow)) {
 		renderer->drawCleanUp ();
@@ -141,6 +140,9 @@ bool App::run () {
 		windower->update_window(mainWindow);
 		windower->update();
 	}
+}
+
+void App::stop () {
 	
 	guier->cleanup();
 	//windower->cleanup();
@@ -152,11 +154,31 @@ bool App::run () {
 	// Terminates GLFW, clearing any resources allocated by GLFW.
 	windower->terminate_window();
 	
-	return true;
+	
+	delete commander;
+	//delete recognizer;
+	//useWebcam = false;
+	delete camera;
+	delete guier;
+	delete renderer;
+	mainWindow = nullptr;
+	delete windower;
+	delete configurer;
+	stater->releaseStateCon();
+	logger->releaseLog();
+	app->releaseApp();
 }
 
-void App::stop() {
-	app->releaseApp();
+void App::processInput () {
+	
+}
+
+void App::updateApp () {
+	
+}
+
+void App::generateOutput () {
+	
 }
 
 /*std::map<unsigned int, cv::Scalar> App::convert_to_cvColor(std::map<unsigned int, nanogui::Color> &ngColors) {

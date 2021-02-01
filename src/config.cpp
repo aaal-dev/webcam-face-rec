@@ -6,40 +6,38 @@ Log* Config::logger = nullptr;
 
 Config::Config () {}
 
-Config::Config(const char* filename) {
-	logger = Log::getLog ();
-	parseFile(filename, 1, this);
+Config::Config (const char* filename) {
+	logger = Log::getLog();
+	parseFile(filename);
 }
 
 Config::~Config () {}
 
 
-void Config::parseFile(const char* filename, int handler, void* user) {
+void Config::parseFile (const char* filename) {
 	FILE* file = fopen(filename, "r");
 	if (!file) {
-		logger->logGLWarning("Something wrong. There is no config file");
+		logger->write(Log::LOG_WARN, "There is no config file");
 		return;
 	}
 	
 	char* line = (char*)malloc(MAX_LINE_LENGTH);
 	if (!line) {
-		
+		logger->write(Log::LOG_WARN, "Could not allocate memory for line");
 		return;
 	}
+	Section* newSection;
 	
 	char section[50] = "";
 	char prev_name[50] = "";
-	char* start;
-	char* end;
-	char* name;
-	char* value;
+	
 	int lineNumber = 0;
 	int error = 0;
 	
 	/* Scan through stream line by line */
 	while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
 		lineNumber++;
-		start = line;
+		char* start = line;
 		
 		if (lineNumber == 1 && 
 			(unsigned char)start[0] == 0xEF &&
@@ -53,35 +51,44 @@ void Config::parseFile(const char* filename, int handler, void* user) {
 		
 		if (*start == ';' || *start == '#') {
 		} else if (*start == '[') {
-			end = find_chars_or_comment(start + 1, "]");
-			if (*end == ']') {
-				*end = '\0';
-				strncpy0(section, start + 1, sizeof(section));
-				*prev_name = '\0';
-			} else if (!error) {
-				/* No ']' found on section line */
-				logger->logGLWarning("Something wrong on line " + itoa(lineNumber) + " in config file");
+			char* chr = goToChar("]", start + 1);
+			if (*chr == ']') {
+				*chr = '\0';
+				newSection = new Section;
+				newSection->name = start+1;
+				sections.push_back(newSection);
+			} else {
+				char* errorStr;
+				sprintf(errorStr, "Something wrong in line %d of config file", lineNumber);
+				logger->write(Log::LOG_WARN, errorStr);
 				error++;
 			}
 		} else if (*start) {
 			/* Not a comment, must be a name[=:]value pair */
-			end = find_chars_or_comment(start, "=:");
-			if (*end == '=' || *end == ':') {
-				*end = '\0';
-				name = rstrip(start);
-				value = lskip(end + 1);
-				end = find_chars_or_comment(value, NULL);
-				if (*end)
-					*end = '\0';
-				rstrip(value);
+			char* chr = goToChar("=", start);
+			if (*chr == '=') {
+				*chr = '\0';
+				char* name = start;
+				skipSpaceFromRight(name);
+				char* value = chr + 1;
+				skipSpaceFromLeft(value);
+				chr = goToChar(NULL, value);;
+				if (*chr)
+					*chr = '\0';
+				skipSpaceFromRight(value);
 				
 				/* Valid name[=:]value pair found, call handler */
 				strncpy0(prev_name, name, sizeof(prev_name));
-				if (!handler(user, section, name, value) && !error)
-					error = lineno;
-			} else if (!error) {
-				/* No '=' or ':' found on name[=:]value line */
-				error = lineno;
+				
+				Property newProperty;
+				newProperty.name = name;
+				newProperty.value = value;
+				
+			} else {
+				char* errorStr;
+				sprintf(errorStr, "No '=' found in line %d of config file", lineNumber);
+				logger->write(Log::LOG_WARN, errorStr);
+				error++;
 			}
 		}
 		
@@ -106,20 +113,9 @@ void Config::skipSpaceFromRight(char* line) {
 		*end = '\0';
 }
 
-char* find_chars_or_comment(const char* line, const char* chars) {
-	int was_space = 0;
-	while (*line && 
-		(!chars || !strchr(chars, *line)) && 
-		!(was_space && 
-		strchr(INI_INLINE_COMMENT_PREFIXES, *line))) 
-	{
-		was_space = isspace((unsigned char)(*line));
+char* Config::goToChar(const char* chars, const char* line) {
+	while (*line && !strchr(chars, *line))
 		line++;
-	}
-	
-	while (*line && (!chars || !strchr(chars, *line)))
-		line++;
-	
 	return (char*)line;
 }
 
@@ -195,19 +191,6 @@ inline std::string INIReader::MakeKey(std::string section, std::string name)
     std::transform(key.begin(), key.end(), key.begin(), ::tolower);
     return key;
 }
-
-inline int Config::ValueHandler(void* user, const char* section, const char* name,
-                            const char* value)
-{
-    INIReader* reader = (INIReader*)user;
-    std::string key = MakeKey(section, name);
-    if (reader->_values[key].size() > 0)
-        reader->_values[key] += "\n";
-    reader->_values[key] += value;
-    reader->_sections.insert(section);
-    return 1;
-}
-
 
 }
 

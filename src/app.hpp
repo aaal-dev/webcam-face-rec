@@ -33,15 +33,15 @@ public:
 	
 	
 	// Functions
-	static App* getApp ();
-	bool initialize ();
-	bool run ();
-	void stop ();
+	static App* getApp();
+	bool initialize();
+	void run();
+	void stop();
 	
 	
 private:
-	App ();
-	~App ();
+	App();
+	~App();
 	
 	
 	// Variables
@@ -50,18 +50,22 @@ private:
 	static StateCon* stater;
 	Config* configurer;
 	Window* windower;
+	GLFWwindow* mainWindow;
 	Render* renderer;
 	Gui* guier;
 	VideoInput* camera;
 	//Recognizer* recognizer;
 	Command* commander;
+	bool isRunning;
 	
-	GLFWwindow* mainWindow;
-	//bool useWebcam;
 	
 	
 	// Functions
-	static void releaseApp ();
+	static void releaseApp();
+	void processInput();
+	void updateApp();
+	void generateOutput();
+	
 	//std::map<unsigned int, cv::Scalar> convert_to_cvColor(std::map<unsigned int, nanogui::Color> &ngColors);
 	
 	

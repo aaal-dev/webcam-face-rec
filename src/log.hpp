@@ -5,26 +5,34 @@
 #include <stdarg.h>
 #include <cstdio>
 
-#define GL_LOG_FILE "gl.log"
+#define LOG_FILE "gl.log"
 
 namespace app {
 
 class Log {
 	
 public:
+	// Enums
+	enum LogStages {
+		LOG_INFO,
+		LOG_WARN,
+		LOG_ERROR,
+		LOG_DEBUG,
+		LOG_MORE,
+		NUM_LOGSTATES
+	};
+	
+	
 	// Variables
-	static Log* log;
+	
 	
 	
 	// Functions
 	static Log* getLog ();
+	static void releaseLog ();
 	
-	
-	bool restartGLlog ();
-	bool logGL (const char* message, ...);
-	bool logGLInfo (const char* message, ...);
-	bool logGLWarning (const char* message, ...);
-	bool logGLError (const char* message, ...); 
+	bool initialize ();
+	bool write (LogStages logStage, const char* message, ...);
 	
 	
 private:
@@ -32,13 +40,11 @@ private:
 	~Log ();
 	
 	
-	
 	// Variables
-	
+	static Log* log;
 	
 	
 	// Functions
-	static void releaseLog ();
 	void printTime (FILE* file); 
 	
 	

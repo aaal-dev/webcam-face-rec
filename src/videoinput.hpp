@@ -22,7 +22,7 @@ public:
 	
 	
 	// Variables
-	
+	bool useWebcam;
 	
 	// Functions
 	bool openCamera();

@@ -22,10 +22,10 @@ Gui::~Gui() {}
 bool Gui::initialize_gui() {
 	vg = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_DEBUG);
 	if (vg == NULL) {
-		logger->logGLInfo("Could not init nanoVG\n");
+		logger->write(Log::LOG_INFO, "Could not init nanoVG\n");
 		return false;
 	}
-	logger->logGLInfo("initialize gui by nanoVG\n");
+	logger->write(Log::LOG_INFO, "initialize gui by nanoVG\n");
 	return true;
 }
 

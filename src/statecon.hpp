@@ -49,6 +49,7 @@ public:
 	
 	// Functions
 	static StateCon* getStateCon();
+	static void releaseStateCon();
 	void setAppState(StatesId appState);
 	StatesId getAppState();
 	
@@ -65,7 +66,7 @@ private:
 	
 	
 	// Functions
-	static void releaseStateCon();
+	
 
 };
 

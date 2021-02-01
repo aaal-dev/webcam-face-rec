@@ -25,83 +25,63 @@ void Log::printTime (FILE* file) {
 	fprintf (file, "%d/%d/%d %d:%d:%d ", lt.tm_mday, 1 + lt.tm_mon, 1900 + lt.tm_year, 1 + lt.tm_hour, 1 + lt.tm_min, 1 + lt.tm_sec);
 }
 
-bool Log::restartGLlog () {
-	FILE* file = fopen (GL_LOG_FILE, "w");
+bool Log::initialize () {
+	FILE* file = fopen (LOG_FILE, "w");
 	if (!file) {
-		fprintf (stderr, "ERROR: could not open GL_LOG_FILE log file %s for writing\n", GL_LOG_FILE);
+		fprintf (stderr, "ERROR: could not open LOG_FILE log file %s for writing\n", LOG_FILE);
 		return false;
 	};
 	printTime (file);
 	fprintf (file, "[INFO] ");
-	fprintf (file, "GL_LOG_FILE log started\n");
+	fprintf (file, "LOG_FILE log started\n");
 	fclose (file);
 	return true;
 }
 
-bool Log::logGL (const char* message, ...) {
+bool Log::write (LogStages logStage, const char* message, ...) {
 	va_list argptr;
-	FILE* file = fopen (GL_LOG_FILE, "a");
+	FILE* file = fopen (LOG_FILE, "a");
 	if (!file) {
-		fprintf(stderr, "ERROR: could not open GL_LOG_FILE log file %s for appending\n", GL_LOG_FILE);
+		fprintf(stderr, "ERROR: could not open LOG_FILE log file %s for appending\n", LOG_FILE);
 		return false;
 	};
-	fprintf (file, "                   ");
+	switch(logStage) {
+		case LOG_INFO: {
+			printTime (file);
+			fprintf (file, "[INFO] ");
+			break;
+		}
+		case LOG_WARN: {
+			printTime (file);
+			fprintf (file, "[WARN] ");
+			break;
+		}
+		case LOG_ERROR: {
+			printTime (file);
+			fprintf (file, "[ERROR] ");
+			break;
+		}
+		case LOG_DEBUG: {
+			printTime (file);
+			fprintf (file, "[DEBUG] ");
+			break;
+		}
+		case LOG_MORE: {
+			fprintf (file, "                   ");
+			break;
+		}
+	}
 	va_start (argptr, message);
 	vfprintf (file, message, argptr);
 	va_end (argptr);
+	if (logStage == LOG_ERROR) {
+		va_start (argptr, message);
+		vfprintf (stderr, message, argptr);
+		va_end (argptr);
+	}
 	fclose (file);
 	return true;
 }
 
-bool Log::logGLInfo (const char* message, ...) {
-	va_list argptr;
-	FILE* file = fopen (GL_LOG_FILE, "a");
-	if (!file) {
-		fprintf(stderr, "ERROR: could not open GL_LOG_FILE log file %s for appending\n", GL_LOG_FILE);
-		return false;
-	};
-	printTime (file);
-	fprintf (file, "[INFO] ");
-	va_start (argptr, message);
-	vfprintf (file, message, argptr);
-	va_end (argptr);
-	fclose (file);
-	return true;
-}
-
-bool Log::logGLWarning (const char* message, ...) {
-	va_list argptr;
-	FILE* file = fopen (GL_LOG_FILE, "a");
-	if (!file) {
-		fprintf (stderr, "ERROR: could not open GL_LOG_FILE log file %s for appending\n", GL_LOG_FILE);
-		return false;
-	};
-	printTime (file);
-	fprintf (file, "[WARN] ");
-	va_start (argptr, message);
-	vfprintf (file, message, argptr);
-	va_end (argptr);
-	fclose (file);
-	return true;
-}
-
-bool Log::logGLError (const char* message, ...) {
-	va_list argptr;
-	FILE* file = fopen (GL_LOG_FILE, "a");
-	if (!file) {
-		fprintf (stderr, "ERROR: could not open GL_LOG_FILE log file %s for appending\n", GL_LOG_FILE);
-		return false;
-	};
-	printTime (file);
-	fprintf (file, "[ERROR] ");
-	va_start (argptr, message);
-	vfprintf (file, message, argptr);
-	va_end (argptr);
-	va_start (argptr, message);
-	vfprintf (stderr, message, argptr);
-	va_end (argptr);
-	fclose (file);
-	return true;
-}
 
 }

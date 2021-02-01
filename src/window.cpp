@@ -27,11 +27,11 @@ Window::~Window() {}
 
 bool Window::initialize() {
 	if(!glfwInit()) {	// Initialize GLFW
-		logger->logGLError("Failed to initialize GLFW\n");
+		logger->write(Log::LOG_ERROR, "Failed to initialize GLFW\n");
 		return false;
 	}
 	glfwSetErrorCallback(glfw_error_callback);
-	logger->logGLInfo ("initialize GLFW: %s\n", glfwGetVersionString());
+	logger->write(Log::LOG_INFO, "initialize GLFW: %s\n", glfwGetVersionString());
 	
 	// Set the required options for GLFW
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -58,13 +58,13 @@ bool Window::initialize() {
 GLFWwindow* Window::create_window() {
 	GLFWwindow* window = glfwCreateWindow(width, height, "Face", nullptr, nullptr);
 	if (!window) {
-		logger->logGLError("Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n" );
+		logger->write(Log::LOG_ERROR, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n" );
 		glfwTerminate();
 		return nullptr;
 	}
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1);
-	logger->logGLInfo("Open main GLFW window\n");
+	logger->write(Log::LOG_INFO, "Open main GLFW window\n");
 	return window;
 }
 
@@ -145,7 +145,7 @@ bool Window::getMonitors() {
 	GLFWmonitor** monitors = glfwGetMonitors(&monitorsCount);
 	GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
 	if (monitors == NULL) {
-		logger->logGLError("No monitors was found by GLFW\n");
+		logger->write(Log::LOG_ERROR, "No monitors was found by GLFW\n");
 		return false;
 	}
 	Monitor** newMonitors = new Monitor*[monitorsCount];
@@ -173,7 +173,7 @@ bool Window::getMonitors() {
 ////////////////////////
 
 void Window::glfw_error_callback(int error, const char* description) {
-	logger->logGLError("GLFW ERROR: code %i msg: %s\n", error, description);
+	logger->write(Log::LOG_ERROR, "GLFW ERROR: code %i msg: %s\n", error, description);
 }
 
 void Window::key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {

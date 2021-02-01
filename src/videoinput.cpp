@@ -8,6 +8,7 @@ StateCon* VideoInput::stater = nullptr;
 VideoInput::VideoInput() {
 	logger = Log::getLog();
 	stater = StateCon::getStateCon();
+	useWebcam = false;
 	hasFrame = false;
 }
 
@@ -15,20 +16,21 @@ VideoInput::~VideoInput(){}
 
 bool VideoInput::openCamera() {
 	// Initialize OpenCV webcam capture
+	if (useWebcam == true) {
 #ifdef __linux__ 
-	webcam = new cv::VideoCapture(0, cv::CAP_V4L2);
+		webcam = new cv::VideoCapture(0, cv::CAP_V4L2);
 #elif _WIN32
-	webcam = new cv::VideoCapture(0, cv::CAP_MSMF);
+		webcam = new cv::VideoCapture(0, cv::CAP_MSMF);
 #else
-	webcam = new cv::VideoCapture(0, cv::CAP_AVFOUNDATION);
+		webcam = new cv::VideoCapture(0, cv::CAP_AVFOUNDATION);
 #endif
-	
-	if (!webcam->isOpened()) {
-		logger->logGLError("Unable to connect to camera.\n" );
-		return false;
+		if (!webcam->isOpened()) {
+			logger->logGLError("Unable to connect to camera.\n" );
+			return false;
+		}
+		std::thread grabFrameThread(&VideoInput::grabFrame, this);
+		grabFrameThread.detach();
 	}
-	std::thread grabFrameThread(&VideoInput::grabFrame, this);
-	grabFrameThread.detach();
 	return true;
 }
 

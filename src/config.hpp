@@ -6,6 +6,8 @@
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
+#include <string.h>
 
 // Inner classes
 #include "log.hpp"
@@ -20,8 +22,19 @@ public:
 	Config(const char* filename);
 	~Config();
 	
-	// Variables
+	struct Property {
+		char* name;
+		char* value;
+	};
 	
+	struct Section {
+		char* name;
+		std::vector<Property> properties;
+	};
+	
+	// Variables
+	std::vector<Section> sections;
+
 	// Functions
 	int ParseError() const;
 	const std::set<std::string>& Sections() const;
@@ -41,10 +54,11 @@ protected:
 	std::set<std::string> _sections;
 	
 	// Functions
-	void parseFile(const char* filename, int handler, void* user);
+	void parseFile(const char* filename);
 	
 	void skipSpaceFromLeft(char* s);
 	void skipSpaceFromRight(char* s);
+	char* goToChar(const char* chars, const char* line);
 	
 	static std::string MakeKey(std::string section, std::string name);
 	static int ValueHandler(void* user, const char* section, const char* name, const char* value);
