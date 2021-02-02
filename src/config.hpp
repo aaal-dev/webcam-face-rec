@@ -1,7 +1,6 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
-//#include "inih/INIReader.h"
 #include <stdio.h>
 #include <map>
 #include <set>
@@ -22,18 +21,57 @@ public:
 	Config(const char* filename);
 	~Config();
 	
+	enum ValueType { STRING_VAL, INT_VAL, DOUBLE_VAL, BOOL_VAL };
+	
 	struct Property {
-		char* name;
-		char* value;
+		const char* name;
+		ValueType type;
+		union Value {
+			const char* stringVal;
+			int intVal;
+			double doubleVal;
+			bool boolVal;
+			
+			Value() = default;
+			Value(const char* s): stringVal(s) {};
+			Value(int i): intVal(i) {};
+			Value(double d): doubleVal(d) {};
+			Value(bool b): boolVal(b) {};
+		} value;
+		
+		
+		Property(const char* n = "", ValueType t = STRING_VAL, const char* v = ""): name(n), type(t), value(v) {};
+		Property(const char* n = "", ValueType t = INT_VAL, int v = 0): name(n), type(t), value(v) {};
+		Property(const char* n = "", ValueType t = DOUBLE_VAL, double v = 0.0): name(n), type(t), value(v) {};
+		Property(const char* n = "", ValueType t = BOOL_VAL, bool v = false): name(n), type(t), value(v) {};
+		Property() = default;
+		
+		bool operator<(const Property& rhs) const {
+			return name < rhs.name;
+		}
+		
+		bool operator==(const Property& rhs) const {
+			return name == rhs.name;
+		}
 	};
 	
 	struct Section {
-		char* name;
-		std::vector<Property> properties;
+		const char* name;
+		std::set<Property*> properties;
+		
+		Section(const char* n = ""): name(n) {};		
+		
+		bool operator<(const Section& rhs) const {
+			return name < rhs.name;
+		}
+		
+		bool operator==(const Section& rhs) const {
+			return name == rhs.name;
+		}
 	};
 	
 	// Variables
-	std::vector<Section> sections;
+	std::set<Section*> sections;
 
 	// Functions
 	int ParseError() const;
@@ -56,8 +94,8 @@ protected:
 	// Functions
 	void parseFile(const char* filename);
 	
-	void skipSpaceFromLeft(char* s);
-	void skipSpaceFromRight(char* s);
+	void skipSpaceFromLeft(const char* s);
+	void skipSpaceFromRight(const char* s);
 	char* goToChar(const char* chars, const char* line);
 	
 	static std::string MakeKey(std::string section, std::string name);

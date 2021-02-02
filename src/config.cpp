@@ -54,9 +54,8 @@ void Config::parseFile (const char* filename) {
 			char* chr = goToChar("]", start + 1);
 			if (*chr == ']') {
 				*chr = '\0';
-				newSection = new Section;
-				newSection->name = start+1;
-				sections.push_back(newSection);
+				newSection = new Section(start+1);
+				sections.insert(newSection);
 			} else {
 				char* errorStr;
 				sprintf(errorStr, "Something wrong in line %d of config file", lineNumber);
@@ -68,21 +67,19 @@ void Config::parseFile (const char* filename) {
 			char* chr = goToChar("=", start);
 			if (*chr == '=') {
 				*chr = '\0';
-				char* name = start;
+				const char* name = start;
 				skipSpaceFromRight(name);
-				char* value = chr + 1;
+				const char* value = chr + 1;
 				skipSpaceFromLeft(value);
 				chr = goToChar(NULL, value);;
 				if (*chr)
 					*chr = '\0';
 				skipSpaceFromRight(value);
 				
-				/* Valid name[=:]value pair found, call handler */
-				strncpy0(prev_name, name, sizeof(prev_name));
-				
-				Property newProperty;
-				newProperty.name = name;
-				newProperty.value = value;
+				Property* newProperty = new Property();
+				newSection->properties.insert(newProperty);
+				newProperty->name = name;
+				newProperty->value = value;
 				
 			} else {
 				char* errorStr;
@@ -107,7 +104,7 @@ void Config::skipSpaceFromLeft(const char* line) {
 		line++;
 }
 
-void Config::skipSpaceFromRight(char* line) {
+void Config::skipSpaceFromRight(const char* line) {
 	char* end = line + strlen(line);
 	while (end > line && isspace((unsigned char)(*--end)))
 		*end = '\0';
@@ -125,17 +122,6 @@ char* strncpy0(char* dest, const char* src, size_t size) {
 	return dest;
 }
 
-
-
-inline int INIReader::ParseError() const
-{
-    return _error;
-}
-
-inline const std::set<std::string>& INIReader::Sections() const
-{
-    return _sections;
-}
 
 inline std::string INIReader::Get(std::string section, std::string name, std::string default_value) const
 {
